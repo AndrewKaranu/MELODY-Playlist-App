@@ -50,13 +50,13 @@ const ArtistGame = () => {
         }
       } else {
         setGameState('end');
-        setScore(response.data.finalScore);
+        setScore(response.data.finalScore || response.data.score);
       }
     } catch (error) {
       console.error('Error making guess:', error);
     }
   };
-
+  
   const endGame = async () => {
     try {
       await axios.post('/api/game/end', {}, { withCredentials: true });

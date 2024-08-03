@@ -17,13 +17,24 @@ async function fetchRandomArtists(accessToken, count = 20) {
         'Authorization': `Bearer ${accessToken}`
       }
     });
-    return response.data.artists.items.map(artist => ({
+    
+    const artists = response.data.artists.items;
+    const artistsWithListeners = await Promise.all(artists.map(async (artist) => {
+      const detailedInfo = await axios.get(`https://api.spotify.com/v1/artists/${artist.id}`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      return {
         id: artist.id,
         name: artist.name,
         imageUrl: artist.images[0]?.url,
-        monthlyListeners: artist.monthlyListeners,
-        previewUrl: ''
-      }));
+        monthlyListeners: detailedInfo.data.followers.total, // Using followers as a proxy for monthly listeners
+        previewUrl: '' // You might want to fetch a preview URL from one of the artist's top tracks
+      };
+    }));
+    
+    return artistsWithListeners;
   } catch (error) {
     console.error('Error fetching random artists:', error);
     return [];
@@ -58,50 +69,57 @@ exports.startGame = async (req, res) => {
 };
   
 exports.getNextArtist = async (req, res) => {
-    const { spotifyId } = req.session.user;
-    const { choice } = req.query;
-    
-    console.log('getNextArtist called with choice:', choice);
-    console.log('Current game state:', gameState[spotifyId]);
-  
-    if (!gameState[spotifyId]) {
-      return res.status(400).json({ error: 'No active game' });
-    }
-  
-    const currentArtist = gameState[spotifyId].artists[gameState[spotifyId].currentIndex];
-    const nextArtist = gameState[spotifyId].artists[gameState[spotifyId].currentIndex + 1];
-  
-    console.log('Current artist:', currentArtist);
-    console.log('Next artist:', nextArtist);
-  
-    if (!nextArtist) {
-      return res.json({ message: 'Game over', finalScore: gameState[spotifyId].score });
-    }
-  
-    const isCorrect = (choice === 'current' && currentArtist.monthlyListeners > nextArtist.monthlyListeners) ||
-                      (choice === 'next' && nextArtist.monthlyListeners > currentArtist.monthlyListeners);
-  
-    console.log('Is correct:', isCorrect);
-  
-    if (isCorrect) {
-      gameState[spotifyId].score++;
-      gameState[spotifyId].currentIndex++;
-      const newNextArtist = gameState[spotifyId].artists[gameState[spotifyId].currentIndex + 1];
-      res.json({
-        correct: true,
-        score: gameState[spotifyId].score,
-        currentArtist: nextArtist,
-        nextArtist: newNextArtist || null
-      });
-    } else {
-      res.json({
-        correct: false,
-        finalScore: gameState[spotifyId].score,
-        currentArtist: currentArtist,
-        nextArtist: nextArtist
-      });
-    }
-  };
+  const { spotifyId } = req.session.user;
+  const { choice } = req.query;
+
+  console.log('getNextArtist called with choice:', choice);
+  console.log('Current game state:', gameState[spotifyId]);
+
+  if (!gameState[spotifyId]) {
+    return res.status(400).json({ error: 'No active game' });
+  }
+
+  const currentArtist = gameState[spotifyId].artists[gameState[spotifyId].currentIndex];
+  const nextArtist = gameState[spotifyId].artists[gameState[spotifyId].currentIndex + 1];
+
+  console.log('Current artist:', currentArtist);
+  console.log('Next artist:', nextArtist);
+
+  if (!nextArtist) {
+    return res.json({ 
+      message: 'Game over', 
+      finalScore: gameState[spotifyId].score,
+      correct: true,
+      currentArtist: currentArtist,
+      nextArtist: null
+    });
+  }
+
+  const isCorrect = (choice === 'current' && currentArtist.followers >= nextArtist.followers) ||
+                    (choice === 'next' && nextArtist.followers > currentArtist.followers);
+
+  console.log('Is correct:', isCorrect);
+
+  if (isCorrect) {
+    gameState[spotifyId].score++;
+    gameState[spotifyId].currentIndex++;
+    const newNextArtist = gameState[spotifyId].artists[gameState[spotifyId].currentIndex + 1];
+    res.json({
+      correct: true,
+      score: gameState[spotifyId].score,
+      currentArtist: nextArtist,
+      nextArtist: newNextArtist || null
+    });
+  } else {
+    res.json({
+      correct: false,
+      finalScore: gameState[spotifyId].score,
+      currentArtist: currentArtist,
+      nextArtist: nextArtist
+    });
+  }
+};
+
 exports.endGame = (req, res) => {
   const { spotifyId } = req.session.user;
   if (gameState[spotifyId]) {
