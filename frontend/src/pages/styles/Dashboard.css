@@ -1,0 +1,83 @@
+.dashboard {
+    background-color: #121212;
+    color: #ffffff;
+    font-family: Arial, sans-serif;
+    min-height: 100vh;
+    padding: 2rem;
+  }
+  
+  .dashboard h1 {
+    font-size: 2.4rem;
+    margin-bottom: 0.5rem;
+    color: #13aa52;
+  }
+  
+  .dashboard p {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+  }
+  
+  .dashboard-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+  }
+  
+  .createPlaylist button, .logout button {
+    background-color: #13aa52;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .createPlaylist button:hover, .logout button:hover {
+    background-color: #0f8c3f;
+  }
+  
+  .playlists {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+  }
+  
+  .playlist-details {
+    background-color: #d8d8d8;
+    border-radius: 8px;
+    padding: 1.5rem;
+    transition: transform 0.3s;
+  }
+  
+  .playlist-details:hover {
+    transform: translateY(-5px);
+  }
+  
+  .playlist-details h4 {
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+    color: #13aa52;
+  }
+  
+  .playlist-details p {
+    margin-bottom: 0.5rem;
+  }
+  
+  .playlist-details a, .playlist-details button {
+    display: inline-block;
+    margin-right: 10px;
+    margin-top: 1rem;
+    padding: 5px 10px;
+    background-color: #13aa52;
+    color: white;
+    text-decoration: none;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .playlist-details a:hover, .playlist-details button:hover {
+    background-color: #0f8c3f;
+  }

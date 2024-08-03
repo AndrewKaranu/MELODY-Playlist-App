@@ -1,0 +1,86 @@
+import React, { useState } from 'react';
+import { useParams } from 'react-router-dom';
+import axios from 'axios';
+
+const SearchBar = ({ onSongSelect }) => {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [selectedSongs, setSelectedSongs] = useState([]);
+
+  const handleSearch = async (e) => {
+    const value = e.target.value;
+    setQuery(value);
+
+    if (value.length > 2) {
+      try {
+        const response = await axios.get(`/api/search?query=${value}`);
+        setResults(response.data);
+      } catch (error) {
+        console.error('Error searching for tracks:', error);
+      }
+    } else {
+      setResults([]);
+    }
+  };
+
+  const handleSongSelect = (song) => {
+    setSelectedSongs([...selectedSongs, song]);
+    setResults([]);
+    setQuery('');
+    onSongSelect(song);
+  };
+
+  const handleConfirm = async () => {
+    const { id } = useParams();
+    try {
+      await axios.post('/api/add-tracks', {
+        playlistId: id,
+        trackUris: selectedSongs.map(song => `spotify:track:${song.id}`)
+      });
+      alert('Tracks added to playlist!');
+      setSelectedSongs([]); // Clear the selected songs after adding to the playlist
+    } catch (error) {
+      console.error('Error adding tracks to playlist:', error);
+    }
+  };
+
+  return (
+    <div>
+      <input
+        type="text"
+        value={query}
+        onChange={handleSearch}
+        placeholder="Search for songs..."
+      />
+      {results.length > 0 && (
+        <ul>
+          {results.map((track) => (
+            <li key={track.id} onClick={() => handleSongSelect(track)}>
+              <img src={track.imageUrl} alt={track.name} width="50" />
+              {track.name} by {track.artists}
+            </li>
+          ))}
+        </ul>
+      )}
+      {selectedSongs.length > 0 && (
+        <div>
+          <h4>Selected Songs:</h4>
+          <ul>
+            {selectedSongs.map((song, index) => (
+              <li key={index}>
+                {song.name} by {song.artists}
+              </li>
+            ))}
+          </ul>
+          <button onClick={handleConfirm}>Add to Playlist</button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default SearchBar;
+
+
+
+

@@ -1,0 +1,40 @@
+/* Navbar.css */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start; /* Changed from center-top to flex-start */
+  padding: 20px 0px; /* Added top and bottom padding */
+  background: transparent; /* Ensure background is transparent */
+  margin: 0; /* Remove any margin */
+}
+
+header h1 {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: white;
+  margin: 0; /* Remove default margin */
+}
+
+header h1:hover {
+  color: #13aa52;
+}
+
+.logo {
+  margin: 0; /* Remove any margin */
+  padding: 0; /* Remove any padding */
+}
+
+.logo h1 {
+  font-size: 5rem;
+  font-weight: 900;
+  margin: 0; /* Remove bottom margin */
+  padding: 0; /* Remove any padding */
+  color: #13aa52;
+  line-height: 1; /* Adjust line height to reduce extra space */
+}
+
+/* Add this to ensure links don't add extra space */
+header a {
+  text-decoration: none;
+  color: inherit;
+}

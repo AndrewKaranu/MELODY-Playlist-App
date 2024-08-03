@@ -1,0 +1,49 @@
+/* CSS styles for ViaTracksForm component */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  ul {
+    list-style-type: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+  }
+  
+  ul li {
+    width: 33%;
+    padding: 10px;
+    box-sizing: border-box;
+    text-align: center;
+  }
+  
+  ul li img {
+    width: 30px; /* Adjust image size as needed */
+    height: 30px;
+    object-fit: cover;
+    border-radius: 5px;
+  }
+  
+  ul li p {
+    margin: 5px 0;
+  }
+  
+  .top-tracks-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+  }
+  
+  .top-track {
+    text-align: center;
+  }
+  
+  .top-track img {
+    width: 100px; /* Adjust image size as needed */
+    height: 100px;
+    object-fit: cover;
+    border-radius: 5px;
+  }
+  

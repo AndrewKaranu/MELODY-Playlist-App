@@ -1,0 +1,52 @@
+const express = require('express')
+require('dotenv').config();
+
+import OpenAI from 'openai';
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY // This is also the default, can be omitted
+});
+
+const app = express();
+
+app.use(express.json());
+
+const PORT = process.env.PORT || 4000;
+
+app.listen(PORT, () => console.log('Server listening on port ${PORT}') );
+
+const configuration = new Configuration({
+    apiKey: process.env.OPENAI_API_KEY,
+});
+
+
+
+app.post('/api/generate-playlist', async (req, res) => {
+    const { prompt } = req.body;
+
+    try {
+        const response = await openai.chat.completions.create({
+            model: "gpt-3.5-turbo",
+            messages: [
+                {
+                    role: "system",
+                    content: "You are a playlist generator. Given a user's prompt, generate a list of 30 songs with song name and artist."
+                },
+                {
+                    role: "user",
+                    content: prompt
+                }
+            ]
+        });
+
+        const songList = JSON.parse(response.data.choices[0].message.content).songs;
+        res.status(200).json({ songs: songList });
+        console.log("Generated Playlist:", songList);
+    } catch (error) {
+        console.error("Error generating playlist:", error);
+        res.status(500).json({ error: "Error generating playlist" });
+    }
+});
+
+
+

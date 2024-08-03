@@ -1,0 +1,252 @@
+.create-playlist {
+    background-color: #121212;
+    color: #ffffff;
+    font-family: Arial, sans-serif;
+    min-height: 100vh;
+    padding: 2rem;
+    overflow-y: auto;
+  }
+  
+  .button-group {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+  }
+  
+  .button-group button {
+    background-color: #13aa52;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .button-group button:hover,
+  .button-group button.active {
+    background-color: #0f8c3f;
+  }
+  
+  .form-container {
+    background-color: #1e1e1e;
+    border-radius: 8px;
+    padding: 1.5rem;
+  }
+  
+  .form-container h2 {
+    color: #13aa52;
+    margin-bottom: 1rem;
+  }
+  
+  .form-container input,
+  .form-container select {
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    color: white;
+  }
+  
+  .form-container button {
+    background-color: #13aa52;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .form-container button:hover {
+    background-color: #0f8c3f;
+  }
+  
+  .search-results {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    overflow-y: auto;
+    z-index: 1000;
+    padding: 2rem;
+  }
+  
+  .search-results ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .search-results li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    cursor: pointer;
+  }
+  
+  .search-results img {
+    margin-right: 1rem;
+  }
+  
+  .top-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+  
+  .top-item {
+    background-color: #2a2a2a;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+  }
+  
+  .top-item img {
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+  }
+
+  .checkbox-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  
+  .checkbox-container input[type="checkbox"] {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #13aa52;
+    border-radius: 4px;
+    margin-right: 10px;
+    cursor: pointer;
+  }
+  
+  .checkbox-container input[type="checkbox"]:checked {
+    background-color: #13aa52;
+  }
+  
+  .checkbox-container label {
+    cursor: pointer;
+  }
+
+  .button-group button.active {
+    background-color: #0f8c3f;
+    font-weight: bold;
+    box-shadow: 0 0 10px rgba(19, 170, 82, 0.5);
+  }
+
+  .back-to-dashboard {
+    background-color: #333;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 2rem;
+  }
+  
+  .back-to-dashboard:hover {
+    background-color: #555;
+  }
+
+  /* Selected Artists Styling */
+  .via-tracks-form,
+.via-artists-form {
+  position: relative;
+}
+
+.selected-tracks-sidebar,
+.selected-artists-sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 300px;
+  height: 100vh;
+  background-color: #1e1e1e;
+  transition: transform 0.3s ease;
+  padding: 20px;
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.3);
+  overflow-y: auto;
+  transform: translateX(95%);
+  z-index: 1000;
+}
+
+.selected-tracks-sidebar.open,
+.selected-artists-sidebar.open {
+  transform: translateX(0);
+}
+
+.toggle-sidebar {
+  position: absolute;
+  left: -30px;
+  top: 50%;
+  /* transform: translateY(-50%); */
+  background-color: #13aa52;
+  color: white;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.selected-tracks-sidebar ul, .selected-artists-sidebar ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .selected-tracks-sidebar li, .selected-artists-sidebar li {
+    display: inline;
+    align-items: center;
+    margin-bottom: 10px;
+    background-color: #2a2a2a;
+    padding: 6px;
+    border-radius: 4px;
+  }
+  
+  .selected-tracks-sidebar li img, .selected-artists-sidebar li img {
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+  
+  .selected-tracks-sidebar li .track-info, .selected-artists-sidebar li .artist-info {
+    flex-grow: 1;
+    overflow: hidden;
+  }
+  
+  .selected-tracks-sidebar li button, .selected-artists-sidebar li button {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 10px;
+  }
+
+.generate-playlist {
+  width: 100%;
+  margin-top: 20px;
+  background-color: #13aa52;
+  color: white;
+  border: none;
+  padding: 10px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.generate-playlist:hover {
+  background-color: #0f8c3f;
+}
