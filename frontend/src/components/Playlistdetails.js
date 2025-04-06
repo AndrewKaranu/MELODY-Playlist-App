@@ -1,7 +1,7 @@
 import { usePlaylistContext } from "../hooks/usePlaylistsContext";
 import { useNavigate } from "react-router-dom";
 
-const PlaylistDetails = ({ playlist }) => {
+const PlaylistDetails = ({ playlist, onDelete }) => {
   const { dispatch } = usePlaylistContext();
   const navigate = useNavigate();
 
@@ -13,15 +13,15 @@ const PlaylistDetails = ({ playlist }) => {
 
     if (response.ok) {
       dispatch({ type: 'DELETE_PLAYLIST', payload: json });
+      onDelete(playlist._id); // Call the onDelete function passed from parent
     }
   };
 
   const handleViewDetails = () => {
-    // Navigate to the playlist player page with the playlist ID
     navigate(`/playlist/${playlist.spotifyId}`);
   };
+
   const handleEdit = () => {
-    // Navigate to the playlist player page with the playlist ID
     navigate(`/EditPlaylist/${playlist.spotifyId}`);
   };
 

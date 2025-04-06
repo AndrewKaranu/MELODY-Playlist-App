@@ -58,3 +58,14 @@ body {
     position: relative; /* Add this line */
     z-index: 2; /* Add this line */
   }
+
+  /* Media queries for responsiveness */
+@media (max-width: 768px) {
+  .tagline {
+    font-size: 1.5rem; /* Adjust font size for smaller screens */
+  }
+
+  .description {
+    font-size: 1rem; /* Adjust font size for smaller screens */
+  }
+}

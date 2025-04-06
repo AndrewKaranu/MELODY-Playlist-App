@@ -1,8 +1,8 @@
 const { response } = require('express')
 const Playlist = require('../models/playlistModel')
 const mongoose = require('mongoose')
-const {viaPrompt, viaListeningHistory,viaProvidedTracks, viaProvidedArtists, imageToPrompt, generateImage} = require('../controllers/openaiController');
-const { searchTrack, initializePlaylist, addTracksToPlaylist,getListeningHistory, searchBarTracks, searchBarArtists, getTopTracks, getTopArtists, setPlaylistCover} = require('../utils/spotifyUtils');
+const {viaPrompt, viaListeningHistory,viaProvidedTracks, viaProvidedArtists, imageToPrompt, generateImage} = require('../controllers/openaiController2');
+const { searchTrack, initializePlaylist, addTracksToPlaylist,getListeningHistory, searchBarTracks, searchBarArtists, getTopTracks, getTopArtists, setPlaylistCover, deleteSpotifyPlaylist} = require('../utils/spotifyUtils');
 const User = require('../models/userModel'); // Adjust the path if necessary
 const { processImageUrl, processUploadedFile } = require('../utils/openaiUtils');
 const axios = require('axios');
@@ -94,7 +94,7 @@ const deletePlaylist = async (req, res) => {
     }
 
     // Delete from Spotify
-    await deletePlaylist(playlist.spotifyId, user.accessToken);
+    await deleteSpotifyPlaylist(playlist.spotifyId, user.accessToken);
 
     // Remove playlist reference from user
     user.playlists = user.playlists.filter(playlistId => playlistId.toString() !== id);
@@ -181,15 +181,16 @@ const getTopArtistsController = async (req, res) => {
   }
 };
 
-// Create playlist from prompt
+
+const { v4: uuidv4 } = require('uuid');
+const playlistStatuses = require('../utils/playlistStatus');
+
 const createPlaylistFromPrompt = async (req, res) => {
-  if (!req.session || !req.session.user || !req.session.user.spotifyId) {
-    return res.status(401).json({ message: 'User not authenticated or Spotify ID not found' });
-  }
-  
   const { prompt, noOfSongs, coverPrompt } = req.body;
   const coverImage = req.file;
   const spotifyId = req.session.user.spotifyId;
+  const tempId = uuidv4(); // Generate a temporary ID for status tracking
+    
 
   try {
     const user = await User.findOne({ spotifyId: spotifyId });
@@ -197,50 +198,66 @@ const createPlaylistFromPrompt = async (req, res) => {
       throw new Error('User not found or access token missing');
     }
 
+    const canCreate = await user.checkDailyLimit();
+    if (!canCreate && !user.isUnlimited) {
+      return res.status(429).json({ 
+        error: 'Daily playlist limit reached. Please try again tomorrow.' 
+      });
+    }
+
+    // Send initial response with tempId
+    res.json({ tempId });
+
+    // Increment count immediately after checking limit
+    if (!user.isUnlimited) {
+      user.playlistCount += 1;
+      user.lastResetDate = new Date();
+      await user.save();
+      
+      // Log for debugging
+      console.log('Updated user playlist count:', user.playlistCount);
+    }
+
+  playlistStatuses.set(tempId, { status: 'Starting playlist generation...' });
+  
+
     const accessToken = user.accessToken;
+    playlistStatuses.set(tempId, { status: 'Generating playlist data...' });
+    const playlistData = await viaPrompt(prompt, noOfSongs);
 
-    console.log('Access token in playListController:', accessToken);
-    console.log('Number of Songs:', noOfSongs);
-
-    const playlistData = await viaPrompt(prompt, noOfSongs, res);
-    console.log('Generated Playlist:', playlistData);
-
+    playlistStatuses.set(tempId, { status: 'Searching for tracks...' });
     const trackIdsPromises = playlistData.songs.map(song => searchTrack(song, accessToken));
     const trackIds = await Promise.all(trackIdsPromises);
 
     const validTrackIds = trackIds.filter(id => id !== null);
 
     if (validTrackIds.length === 0) {
-      return res.status(404).json({ message: 'No valid tracks found for the generated playlist' });
+      throw new Error('No valid tracks found for the generated playlist');
     }
 
+    playlistStatuses.set(tempId, { status: 'Creating playlist on Spotify...' });
     const spotifyPlaylist = await initializePlaylist(spotifyId, playlistData.name, playlistData.description, accessToken);
+
+    playlistStatuses.set(tempId, { status: 'Adding tracks to playlist...' });
     await addTracksToPlaylist(spotifyPlaylist.id, validTrackIds, accessToken);
+
+    playlistStatuses.set(tempId, { status: 'Finalizing playlist...' });
 
     // Handle playlist cover
     let coverImageBase64;
     if (coverImage) {
-      console.log('Cover image uploaded:', coverImage.path);
       coverImageBase64 = await processUploadedFile(coverImage.path);
     } else if (coverPrompt) {
-      // Generate image using OpenAI
       const coverImageUrl = await generateImage(coverPrompt);
-      console.log('Generated cover image URL:', coverImageUrl);
-      
-      // Download the image
       const response = await axios.get(coverImageUrl, { responseType: 'arraybuffer' });
-      
-      // Resize and compress the image
       const resizedImage = await sharp(response.data)
-        .resize(256, 256) // Resize to 256x256
-        .jpeg({ quality: 100 }) // Convert to JPEG with 80% quality
+        .resize(256, 256)
+        .jpeg({ quality: 100 })
         .toBuffer();
-      
       coverImageBase64 = resizedImage.toString('base64');
     }
 
     if (coverImageBase64) {
-      console.log('Setting playlist cover');
       await setPlaylistCover(spotifyPlaylist.id, coverImageBase64, accessToken);
     }
 
@@ -262,15 +279,10 @@ const createPlaylistFromPrompt = async (req, res) => {
     user.playlists.push(playlist._id);
     await user.save();
 
-    res.status(200).json({ 
-      message: 'Playlist created successfully', 
-      playlistId: playlist._id, 
-      spotifyUrl: playlist.spotifyUrl,
-      // coverImage: coverImageUrl
-    });
+    playlistStatuses.set(tempId, { status: 'complete', playlistId: playlist._id.toString(), spotifyId: spotifyPlaylist.id });
   } catch (error) {
     console.error('Error creating playlist:', error);
-    res.status(500).json({ message: 'Error creating playlist', error: error.message });
+    playlistStatuses.set(tempId, { status: 'error', message: 'Error creating playlist' });
   }
 };
 
@@ -282,31 +294,60 @@ const createPlaylistUsingHistory = async (req, res) => {
 
   const { prompt, noOfSongs, timeRange } = req.body;
   const spotifyId = req.session.user.spotifyId;
+  const tempId = uuidv4();
+
+
 
   try {
     const user = await User.findOne({ spotifyId: spotifyId });
     if (!user || !user.accessToken) {
       throw new Error('User not found or access token missing');
     }
+    const canCreate = await user.checkDailyLimit();
+    if (!canCreate && !user.isUnlimited) {
+      return res.status(429).json({ 
+        error: 'Daily playlist limit reached. Please try again tomorrow.' 
+      });
+    }
+
+    // Send initial response with tempId
+    res.json({ tempId });
+
+    // Increment count immediately after checking limit
+    if (!user.isUnlimited) {
+      user.playlistCount += 1;
+      user.lastResetDate = new Date();
+      await user.save();
+      
+      // Log for debugging
+      console.log('Updated user playlist count:', user.playlistCount);
+    }
 
     const accessToken = user.accessToken;
 
+    playlistStatuses.set(tempId, { status: 'Fetching listening history...' });
     const listeningHistory = await getListeningHistory(spotifyId, timeRange);
 
-    const playlistData = await viaListeningHistory(spotifyId, timeRange, prompt, noOfSongs, listeningHistory, res);
+    playlistStatuses.set(tempId, { status: 'Generating playlist data...' });
+    const playlistData = await viaListeningHistory(spotifyId, timeRange, prompt, noOfSongs, listeningHistory);
 
+    playlistStatuses.set(tempId, { status: 'Searching for tracks...' });
     const trackIdsPromises = playlistData.songs.map(song => searchTrack(song, accessToken));
     const trackIds = await Promise.all(trackIdsPromises);
 
     const validTrackIds = trackIds.filter(id => id !== null);
 
     if (validTrackIds.length === 0) {
-      return res.status(404).json({ message: 'No valid tracks found for the generated playlist' });
+      throw new Error('No valid tracks found for the generated playlist');
     }
 
+    playlistStatuses.set(tempId, { status: 'Creating playlist on Spotify...' });
     const spotifyPlaylist = await initializePlaylist(spotifyId, playlistData.name, playlistData.description, accessToken);
+
+    playlistStatuses.set(tempId, { status: 'Adding tracks to playlist...' });
     await addTracksToPlaylist(spotifyPlaylist.id, validTrackIds, accessToken);
 
+    playlistStatuses.set(tempId, { status: 'Finalizing playlist...' });
     const playlist = new Playlist({
       title: playlistData.name,
       description: playlistData.description,
@@ -322,10 +363,15 @@ const createPlaylistUsingHistory = async (req, res) => {
     user.playlists.push(playlist._id);
     await user.save();
 
-    res.status(200).json({ message: 'Playlist created successfully', playlistId: playlist._id, spotifyUrl: playlist.spotifyUrl });
+    playlistStatuses.set(tempId, { 
+      status: 'complete', 
+      playlistId: playlist._id.toString(), 
+      spotifyId: spotifyPlaylist.id,
+      spotifyUrl: playlist.spotifyUrl 
+    });
   } catch (error) {
     console.error('Error creating playlist:', error);
-    res.status(500).json({ message: 'Error creating playlist', error: error.message });
+    playlistStatuses.set(tempId, { status: 'error', message: 'Error creating playlist' });
   }
 };
 
@@ -337,29 +383,57 @@ const createPlaylistUsingProvidedTracks = async (req, res) => {
 
   const { noOfSongs, providedTracks } = req.body;
   const spotifyId = req.session.user.spotifyId;
+  const tempId = uuidv4();
+
+  
 
   try {
     const user = await User.findOne({ spotifyId: spotifyId });
     if (!user || !user.accessToken) {
       throw new Error('User not found or access token missing');
     }
+    const canCreate = await user.checkDailyLimit();
+    if (!canCreate && !user.isUnlimited) {
+      return res.status(429).json({ 
+        error: 'Daily playlist limit reached. Please try again tomorrow.' 
+      });
+    }
+
+    // Send initial response with tempId
+    res.json({ tempId });
+
+    // Increment count immediately after checking limit
+    if (!user.isUnlimited) {
+      user.playlistCount += 1;
+      user.lastResetDate = new Date();
+      await user.save();
+      
+      // Log for debugging
+      console.log('Updated user playlist count:', user.playlistCount);
+    }
 
     const accessToken = user.accessToken;
 
-    const playlistData = await viaProvidedTracks(30 , providedTracks);
+    playlistStatuses.set(tempId, { status: 'Generating playlist data...' });
+    const playlistData = await viaProvidedTracks(noOfSongs, providedTracks);
 
+    playlistStatuses.set(tempId, { status: 'Searching for tracks...' });
     const trackIdsPromises = playlistData.songs.map(song => searchTrack(song, accessToken));
     const trackIds = await Promise.all(trackIdsPromises);
 
     const validTrackIds = trackIds.filter(id => id !== null);
 
     if (validTrackIds.length === 0) {
-      return res.status(404).json({ message: 'No valid tracks found for the generated playlist' });
+      throw new Error('No valid tracks found for the generated playlist');
     }
 
+    playlistStatuses.set(tempId, { status: 'Creating playlist on Spotify...' });
     const spotifyPlaylist = await initializePlaylist(spotifyId, playlistData.name, playlistData.description, accessToken);
+
+    playlistStatuses.set(tempId, { status: 'Adding tracks to playlist...' });
     await addTracksToPlaylist(spotifyPlaylist.id, validTrackIds, accessToken);
 
+    playlistStatuses.set(tempId, { status: 'Finalizing playlist...' });
     const playlist = new Playlist({
       title: playlistData.name,
       description: playlistData.description,
@@ -374,10 +448,15 @@ const createPlaylistUsingProvidedTracks = async (req, res) => {
     user.playlists.push(playlist._id);
     await user.save();
 
-    res.status(200).json({ message: 'Playlist created successfully', playlistId: playlist._id, spotifyUrl: playlist.spotifyUrl });
+    playlistStatuses.set(tempId, { 
+      status: 'complete', 
+      playlistId: playlist._id.toString(), 
+      spotifyId: spotifyPlaylist.id,
+      spotifyUrl: playlist.spotifyUrl 
+    });
   } catch (error) {
     console.error('Error creating playlist:', error);
-    res.status(500).json({ message: 'Error creating playlist', error: error.message });
+    playlistStatuses.set(tempId, { status: 'error', message: 'Error creating playlist' });
   }
 };
 
@@ -389,34 +468,62 @@ const createPlaylistUsingProvidedArtists = async (req, res) => {
 
   const { noOfSongs, providedArtists } = req.body;
   const spotifyId = req.session.user.spotifyId;
+  const tempId = uuidv4();
+
+  playlistStatuses.set(tempId, { status: 'Starting playlist generation...' });
+  
 
   try {
     const user = await User.findOne({ spotifyId: spotifyId });
     if (!user || !user.accessToken) {
       throw new Error('User not found or access token missing');
     }
+    const canCreate = await user.checkDailyLimit();
+    if (!canCreate && !user.isUnlimited) {
+      return res.status(429).json({ 
+        error: 'Daily playlist limit reached. Please try again tomorrow.' 
+      });
+    }
+
+    // Send initial response with tempId
+    res.json({ tempId });
+
+    // Increment count immediately after checking limit
+    if (!user.isUnlimited) {
+      user.playlistCount += 1;
+      user.lastResetDate = new Date();
+      await user.save();
+      
+      // Log for debugging
+      console.log('Updated user playlist count:', user.playlistCount);
+    }
 
     const accessToken = user.accessToken;
 
-    const playlistData = await viaProvidedArtists(50 , providedArtists);
+    playlistStatuses.set(tempId, { status: 'Generating playlist data...' });
+    const playlistData = await viaProvidedArtists(noOfSongs, providedArtists);
 
+    playlistStatuses.set(tempId, { status: 'Searching for tracks...' });
     const trackIdsPromises = playlistData.songs.map(song => searchTrack(song, accessToken));
     const trackIds = await Promise.all(trackIdsPromises);
 
     const validTrackIds = trackIds.filter(id => id !== null);
 
     if (validTrackIds.length === 0) {
-      return res.status(404).json({ message: 'No valid artists found for the generated playlist' });
+      throw new Error('No valid tracks found for the generated playlist');
     }
 
-
+    playlistStatuses.set(tempId, { status: 'Creating playlist on Spotify...' });
     const spotifyPlaylist = await initializePlaylist(spotifyId, playlistData.name, playlistData.description, accessToken);
-    await addTracksToPlaylist(spotifyPlaylist.id, trackIds, accessToken);
 
+    playlistStatuses.set(tempId, { status: 'Adding tracks to playlist...' });
+    await addTracksToPlaylist(spotifyPlaylist.id, validTrackIds, accessToken);
+
+    playlistStatuses.set(tempId, { status: 'Finalizing playlist...' });
     const playlist = new Playlist({
       title: playlistData.name,
       description: playlistData.description,
-      noOfSongs: trackIds.length,
+      noOfSongs: validTrackIds.length,
       spotifyUrl: spotifyPlaylist.external_urls.spotify,
       spotifyId: spotifyPlaylist.id,
       userId: user._id
@@ -427,71 +534,101 @@ const createPlaylistUsingProvidedArtists = async (req, res) => {
     user.playlists.push(playlist._id);
     await user.save();
 
-    res.status(200).json({ message: 'Playlist created successfully', playlistId: playlist._id, spotifyUrl: playlist.spotifyUrl });
+    playlistStatuses.set(tempId, { 
+      status: 'complete', 
+      playlistId: playlist._id.toString(), 
+      spotifyId: spotifyPlaylist.id,
+      spotifyUrl: playlist.spotifyUrl 
+    });
   } catch (error) {
     console.error('Error creating playlist:', error);
-    res.status(500).json({ message: 'Error creating playlist', error: error.message });
+    playlistStatuses.set(tempId, { status: 'error', message: 'Error creating playlist' });
   }
 };
 
 
-//Create playlist via provided images
 const createPlaylistFromImage = async (req, res) => {
   if (!req.session || !req.session.user || !req.session.user.spotifyId) {
     return res.status(401).json({ message: 'User not authenticated or Spotify ID not found' });
   }
 
   const spotifyId = req.session.user.spotifyId;
+  const tempId = uuidv4(); // Generate a temporary ID for status tracking
+  
+  
 
   try {
     const user = await User.findOne({ spotifyId: spotifyId });
     if (!user || !user.accessToken) {
       throw new Error('User not found or access token missing');
     }
+    const canCreate = await user.checkDailyLimit();
+    if (!canCreate && !user.isUnlimited) {
+      return res.status(429).json({ 
+        error: 'Daily playlist limit reached. Please try again tomorrow.' 
+      });
+    }
+
+    // Send initial response with tempId
+    res.json({ tempId });
+
+    // Increment count immediately after checking limit
+    if (!user.isUnlimited) {
+      user.playlistCount += 1;
+      user.lastResetDate = new Date();
+      await user.save();
+      
+      // Log for debugging
+      console.log('Updated user playlist count:', user.playlistCount);
+    }
 
     const accessToken = user.accessToken;
     let prompt;
 
+    playlistStatuses.set(tempId, { status: 'Processing image...' });
+
     // Handling an uploaded file
     if (req.file) {
-      const filePath = req.file.path; // Assuming you're using something like multer for file uploads
-
-      // Compress the image without resizing
+      const filePath = req.file.path;
       const compressedFilePath = `${filePath}-compressed.jpg`;
       await sharp(filePath)
-        .resize({ width: 800 }) // Resize to a maximum width of 800px
-        .grayscale() // Convert to grayscale
-        .jpeg({ quality: 70 }) // Adjust quality as needed
+        .resize({ width: 800 })
+        .grayscale()
+        .jpeg({ quality: 70 })
         .toFile(compressedFilePath);
-
+      
       prompt = await imageToPrompt(compressedFilePath, 'file');
     }
     // Handling a URL
     else if (req.body.imageUrl) {
-      const imageUrl = req.body.imageUrl;
-      prompt = await imageToPrompt(imageUrl, 'url');
+      prompt = await imageToPrompt(req.body.imageUrl, 'url');
     }
     else {
-      // Assuming the image or URL is sent in the request body under 'imageData' if no file or imageUrl
       const { imageData } = req.body;
       prompt = await imageToPrompt(imageData);
     }
 
-    // Proceed with the rest of the function using the prompt from imageToPrompt
-    const { noOfSongs } = req.body;
+    playlistStatuses.set(tempId, { status: 'Generating playlist data...' });
+    const { noOfSongs } = 50;
     const playlistData = await viaPrompt(prompt, noOfSongs, accessToken);
 
+    playlistStatuses.set(tempId, { status: 'Searching for tracks...' });
     const trackIdsPromises = playlistData.songs.map(song => searchTrack(song, accessToken));
     const trackIds = await Promise.all(trackIdsPromises);
 
     const validTrackIds = trackIds.filter(id => id !== null);
 
     if (validTrackIds.length === 0) {
-      return res.status(404).json({ message: 'No valid tracks found for the generated playlist' });
+      throw new Error('No valid tracks found for the generated playlist');
     }
 
+    playlistStatuses.set(tempId, { status: 'Creating playlist on Spotify...' });
     const spotifyPlaylist = await initializePlaylist(spotifyId, playlistData.name, playlistData.description, accessToken);
+
+    playlistStatuses.set(tempId, { status: 'Adding tracks to playlist...' });
     await addTracksToPlaylist(spotifyPlaylist.id, validTrackIds, accessToken);
+
+    playlistStatuses.set(tempId, { status: 'Finalizing playlist...' });
 
     // Save playlist to database
     const playlist = new Playlist({
@@ -510,10 +647,14 @@ const createPlaylistFromImage = async (req, res) => {
     user.playlists.push(playlist._id);
     await user.save();
 
-    res.status(200).json({ message: 'Playlist created successfully', playlistId: playlist._id, spotifyUrl: playlist.spotifyUrl });
+    playlistStatuses.set(tempId, { 
+      status: 'complete', 
+      playlistId: playlist._id.toString(), 
+      spotifyId: spotifyPlaylist.id 
+    });
   } catch (error) {
     console.error('Error creating playlist:', error);
-    res.status(500).json({ message: 'Error creating playlist', error: error.message });
+    playlistStatuses.set(tempId, { status: 'error', message: 'Error creating playlist' });
   }
 };
 

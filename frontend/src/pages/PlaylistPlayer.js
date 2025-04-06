@@ -1,7 +1,8 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 const PlaylistPlayer = () => {
+  const navigate = useNavigate();
   const { id } = useParams();
   const playlistUrl = `https://open.spotify.com/embed/playlist/${id}?utm_source=generator&theme=0`;
 
@@ -19,6 +20,9 @@ const PlaylistPlayer = () => {
         allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
         loading="lazy"
       ></iframe>
+      <button className="back-to-dashboard" onClick={() => navigate('/dashboard')}>
+        Back to Dashboard
+      </button>
     </div>
   );
 };

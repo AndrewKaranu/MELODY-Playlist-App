@@ -1,0 +1,101 @@
+/* Search bar input */
+.search input[type="text"] {
+    width: 60%;
+    padding: 10px;
+    border-radius: 20px;
+    border: 1px solid #ccc;
+    margin: 0 auto 20px;
+    display: block;
+  }
+
+  
+  /* Search results container */
+  .search ul {
+    background: rgba(47, 47, 47, 0.54); /* Glass-like background */
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(12.2px); /* Glass effect */
+    -webkit-backdrop-filter: blur(12.2px);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(47, 47, 47, 0.57);
+    margin: 0 auto;
+    width: 60%;
+    list-style-type: none;
+  }
+  
+  /* Individual search result item */
+  .search li {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin: 10px 0;
+    cursor: pointer;
+    border-radius: 10px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .search li:hover {
+    background-color: rgba(255, 255, 255, 0.4); /* Slight hover effect */
+  }
+  
+  /* Image in search results */
+  .search li img {
+    border-radius: 5px;
+    margin-right: 15px;
+  }
+  
+  /* Text next to image */
+  .search li span {
+    font-size: 16px;
+    color: #fff; /* White text for contrast */
+  }
+  
+  /* Selected songs section */
+  .search h4 {
+    margin-top: 20px;
+    color: #fff;
+  }
+  
+  .search button {
+    background-color: #1db954; /* Spotify green */
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .search button:hover {
+    background-color: #1aa34a;
+  }
+  
+  @media (max-width: 768px) {
+    .search input[type="text"] {
+      width: 90%;
+    }
+  
+    .search ul {
+      width: 90%;
+      padding: 10px;
+    }
+  
+    .search li {
+      display: list-item;
+      flex-direction: column;
+      text-align: center;
+      padding: 15px 5px;
+    }
+  
+    .search li img {
+      margin-right: 0;
+      margin-bottom: 10px;
+    }
+  
+    .search li span {
+      display: block;
+      width: 100%;
+      word-wrap: break-word;
+    }
+  }

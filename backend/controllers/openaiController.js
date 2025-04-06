@@ -12,7 +12,7 @@ async function viaPrompt(prompt, noOfSongs, res) {
       messages: [
         {
           role: "system",
-          content: `You are a playlist generator. Given a user's prompt, generate a creative playlist name, a short description, and a list of ${noOfSongs} songs with song name and artist in the following format strictly:
+          content: `You are a playlist generator. Given a user's prompt, generate a creative playlist name, a short one sentence description, and a list of ${noOfSongs} songs with song name and artist in the following format strictly:
           Playlist Name: <name>
           Description: <description>
           1. "Song Name" by Artist`
@@ -75,7 +75,7 @@ const viaListeningHistory = async (userId, timeRange, prompt, noOfSongs, listeni
       messages: [
         {
           role: "system",
-          content: `You are a playlist generator. Given a user's prompt and listening history (strictly only use the history as context do not include songs from the users listening history) (User Listening History: ${historyText}), generate a creative playlist name, a short description, and a list of ${noOfSongs} songs with song name and artist in the following format strictly(dont use ** to indicate any fields):
+          content: `You are a playlist generator. Given a user's prompt and listening history (strictly only use the history as context do not include songs from the users listening history) (User Listening History: ${historyText}), generate a creative playlist name, a short one sentence description, and a list of ${noOfSongs} songs with song name and artist in the following format strictly(dont use ** to indicate any fields):
           Playlist Name: <name>
           Description: <description>
           1. "Song Name" by Artist`
@@ -137,7 +137,7 @@ const viaProvidedTracks = async (noOfSongs, providedTracks) => {
       messages: [
         {
           role: "system",
-          content: `You are a playlist generator. Given a list of provided tracks (use the tracks as context and generate a playlist with similar songs) (Provided Tracks: ${providedTracksText}), generate a creative playlist name, a short description, and a list of ${noOfSongs} songs with song name and artist in the following format strictly:
+          content: `You are a playlist generator. Given a list of provided tracks (use the tracks as context and generate a playlist with similar songs) (Provided Tracks: ${providedTracksText}), generate a creative playlist name, a short one sentence description, and a list of ${noOfSongs} songs with song name and artist in the following format strictly:
           Playlist Name: <name>
           Description: <description>
           1. "Song Name" by Artist`
@@ -185,7 +185,7 @@ const viaProvidedArtists = async (noOfSongs, providedArtists) => {
       messages: [
         {
           role: "system",
-          content: `You are a playlist generator. Given a list of provided artists (use the artists as context and generate a playlist with similar songs by similar artists) (Provided Artists: ${providedArtistsText}), generate a creative playlist name, a short description, and a list of ${noOfSongs} songs with song name and artist in the following format strictly:
+          content: `You are a playlist generator. Given a list of provided artists (use the artists as context and generate a playlist with similar songs by similar artists) (Provided Artists: ${providedArtistsText}), generate a creative playlist name, a short one sentence description, and a list of ${noOfSongs} songs with song name and artist in the following format strictly:
           Playlist Name: <name>
           Description: <description>
           1. "Song Name" by Artist`
@@ -264,7 +264,7 @@ const imageToPrompt = async (imageUrl, inputType) => {
   }
 };
 
-// In openaiController.js
+
 
 const generateImage = async (prompt) => {
   try {

@@ -29,4 +29,22 @@
     100% { background-position: 0% 52%; }
   } 
 
+  /* Header Styles */
+.header {
+  position: relative;
+  align-content: center;
+}
+
+/* Media Queries */
+@media screen and (max-width: 768px) {
+  .model-wrapper {
+      max-width: 90%;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .model-wrapper {
+      max-width: 95%;
+  }
+}
   

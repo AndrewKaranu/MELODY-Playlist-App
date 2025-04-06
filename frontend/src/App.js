@@ -8,13 +8,19 @@ import PlaylistPlayer from './pages/PlaylistPlayer';
 import EditPlaylist from './pages/EditPlaylist';
 import './App.css';
 import ArtistGame from './pages/ArtistGame';
+import Support from './pages/Support';
+import LoadingScreen from './components/LoadingScreen'
+import Features from './pages/Features';
+
 
 function App() {
   return (
     <div className="App">
       <BrowserRouter>
         <div className="background-animation">
+          <div className="header">
           <Navbar />
+          </div>
           <div className="pages">
             <Routes>
               <Route path="/" element={<Home />} />
@@ -23,6 +29,10 @@ function App() {
               <Route path="/playlist/:id" element={<PlaylistPlayer />} />
               <Route path="/EditPlaylist/:id" element={<EditPlaylist />} />
               <Route path="/OpenGame" element={< ArtistGame />} />
+              <Route path="/Support" element={<Support />} />
+              <Route path='/Loader' element = {<LoadingScreen/>} />
+              <Route path="/features" element={<Features />} />
+
 
             </Routes>
           </div>

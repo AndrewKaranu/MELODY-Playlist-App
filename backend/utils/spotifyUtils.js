@@ -101,7 +101,7 @@ async function addTracksToPlaylist(playlistId, trackIds, accessToken) {
   }
 }
 
-async function deletePlaylist(playlistId, accessToken) {
+async function deleteSpotifyPlaylist(playlistId, accessToken) {
   console.log('Deleting playlist:', playlistId);
   console.log('Access token in deletePlaylist:', accessToken);
   
@@ -187,7 +187,7 @@ const getTopArtists = async (userId, timeRange = 'medium_term') => {
 const searchBarTracks = async (query, accessToken) => {
   console.log('Searching tracks for autocomplete:', query);
   try {
-    const url = `https://api.spotify.com/v1/search?type=track&limit=10&q=${encodeURIComponent(query)}`;
+    const url = `https://api.spotify.com/v1/search?type=track&limit=12&q=${encodeURIComponent(query)}`;
     const response = await axios.get(url, {
       headers: {
         'Authorization': `Bearer ${accessToken}`
@@ -212,7 +212,7 @@ const searchBarTracks = async (query, accessToken) => {
 const searchBarArtists = async (query, accessToken) => {
   console.log('Searching artists for autocomplete:', query);
   try {
-    const url = `https://api.spotify.com/v1/search?type=artist&limit=10&q=${encodeURIComponent(query)}`;
+    const url = `https://api.spotify.com/v1/search?type=artist&limit=12&q=${encodeURIComponent(query)}`;
     const response = await axios.get(url, {
       headers: {
         'Authorization': `Bearer ${accessToken}`
@@ -275,4 +275,4 @@ async function setPlaylistCover(playlistId, imageBase64, accessToken) {
   }
 }
 
-module.exports = { searchTrack, initializePlaylist, addTracksToPlaylist, deletePlaylist, getAccessToken, getListeningHistory, searchBarTracks, searchBarArtists, getTopTracks, getTopArtists, setPlaylistCover };
+module.exports = { searchTrack, initializePlaylist, addTracksToPlaylist, deleteSpotifyPlaylist, getAccessToken, getListeningHistory, searchBarTracks, searchBarArtists, getTopTracks, getTopArtists, setPlaylistCover };

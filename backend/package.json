@@ -20,6 +20,7 @@
     "express": "^4.19.2",
     "express-http-proxy": "^2.0.0",
     "express-session": "^1.18.0",
+    "express-sse": "^0.5.3",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.8.0",
     "mongoose": "^8.4.4",
@@ -31,7 +32,9 @@
     "passport-google-oauth20": "^2.0.0",
     "passport-local": "^1.0.0",
     "query-string": "^9.0.0",
-    "sharp": "^0.33.4",
-    "spotify-web-api-node": "^5.0.2"
+    "sharp": "^0.33.5",
+    "spotify-web-api-node": "^5.0.2",
+    "sse-express": "^1.0.2",
+    "uuid": "^10.0.0"
   }
 }

@@ -1,11 +1,12 @@
 /* Navbar.css */
 header {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start; /* Changed from center-top to flex-start */
-  padding: 20px 0px; /* Added top and bottom padding */
+  justify-content: center; /* Center the content */
+  align-items: center; /* Center vertically */
+  padding: 20px; /* Adjust padding as needed */
   background: transparent; /* Ensure background is transparent */
-  margin: 0; /* Remove any margin */
+  gap: 10px;
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
 }
 
 header h1 {
@@ -37,4 +38,15 @@ header h1:hover {
 header a {
   text-decoration: none;
   color: inherit;
+}
+
+/* Media queries for responsiveness */
+@media (max-width: 768px) {
+  header h1 {
+    font-size: 1.8rem; /* Adjust font size for smaller screens */
+  }
+
+  .logo h1 {
+    font-size: 3rem; /* Adjust logo size for smaller screens */
+  }
 }

@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import './styles/Searchbar.css';
+import Notification from './Notification'; // Import the Notification component
 
 const SearchBar = ({ playlistId, onSongSelect }) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [selectedSongs, setSelectedSongs] = useState([]);
+  const [notification, setNotification] = useState({ message: '', isVisible: false });
 
   useEffect(() => {
     const searchSongs = async () => {
@@ -44,15 +47,22 @@ const SearchBar = ({ playlistId, onSongSelect }) => {
       }, {
         withCredentials: true
       });
-      alert('Tracks added to playlist!');
+
+      // Show notification instead of alert
+      setNotification({ message: 'Tracks added to playlist!', isVisible: true });
+
       setSelectedSongs([]);
     } catch (error) {
       console.error('Error adding tracks to playlist:', error);
     }
   };
 
+  const handleCloseNotification = () => {
+    setNotification({ ...notification, isVisible: false });
+  };
+
   return (
-    <div>
+    <div className='search'>
       <input
         type="text"
         value={query}
@@ -82,6 +92,13 @@ const SearchBar = ({ playlistId, onSongSelect }) => {
           <button onClick={handleConfirm}>Add to Playlist</button>
         </div>
       )}
+
+      {/* Notification pop-up */}
+      <Notification
+        message={notification.message}
+        isVisible={notification.isVisible}
+        onClose={handleCloseNotification}
+      />
     </div>
   );
 };

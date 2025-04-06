@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './ViaTracksForm.css';
-
+import Notification from './Notification';
+import LoadingScreen from './LoadingScreen';
 const ViaTracksForm = () => {
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -9,6 +10,10 @@ const ViaTracksForm = () => {
   const [selectedTracks, setSelectedTracks] = useState([]);
   const [timeframe, setTimeframe] = useState('medium_term');
   const [showSearch, setShowSearch] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [playlistId, setPlaylistId] = useState(null);
+  const [error, setError] = useState(null);
+  const [notification, setNotification] = useState({ message: '', isVisible: false });
 
   useEffect(() => {
     // Fetch top tracks on component mount
@@ -77,21 +82,60 @@ const ViaTracksForm = () => {
   const generatePlaylist = async () => {
     try {
       if (selectedTracks.length === 0) {
-        console.error('No tracks selected');
+        setError('No tracks selected');
         return;
       }
-      
-      console.log('Sending tracks:', selectedTracks); // Add this log
+      setIsLoading(true);
+      setError(null);
       
       const response = await axios.post('/api/playlists/createWithTracks', { 
         noOfSongs: selectedTracks.length,
         providedTracks: selectedTracks
       });
-      console.log('Generated playlist:', response.data);
+
+      if (response.data.error?.includes('Daily playlist limit reached')) {
+        setNotification({
+          message: 'Daily playlist limit (10) reached. Please try again tomorrow.',
+          isVisible: true
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      setPlaylistId(response.data.tempId);
     } catch (error) {
       console.error('Error generating playlist:', error);
+      if (error.response?.data?.error?.includes('Daily playlist limit reached')) {
+        setNotification({
+          message: 'Daily playlist limit (10) reached. Please try again tomorrow.',
+          isVisible: true
+        });
+      } else {
+        setError('Error generating playlist. Please try again.');
+      }
+      setIsLoading(false);
     }
   };
+
+  const handleCloseNotification = () => {
+    setNotification({ ...notification, isVisible: false });
+  };
+  if (isLoading || playlistId) {
+    return (
+      <LoadingScreen 
+        playlistId={playlistId}
+        onError={(errorMessage) => {
+          setError(errorMessage);
+          setIsLoading(false);
+          setPlaylistId(null);
+        }}
+        onComplete={(newPlaylistId) => {
+          setIsLoading(false);
+          
+        }}
+      />
+    );
+  }
     const toggleSearch = () => {
       setShowSearch(!showSearch);
   };
@@ -169,6 +213,11 @@ const ViaTracksForm = () => {
           <button className="generate-playlist" onClick={generatePlaylist}>Generate Playlist</button>
         )}
       </div>
+      <Notification
+        message={notification.message}
+        isVisible={notification.isVisible}
+        onClose={handleCloseNotification}
+      />
     </div>
   );
 };

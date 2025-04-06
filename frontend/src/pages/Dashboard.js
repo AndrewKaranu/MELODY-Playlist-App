@@ -4,12 +4,15 @@ import SpotifyLogoutButton from "../components/SpotifyLogoutButton";
 import CreatePlaylistButton from "../components/CreatePlayListButton";
 import OpenGameButton from "../components/OpenGameButton";
 import Playlistdetails from "../components/Playlistdetails";
+import Notification from '../components/Notification';
 import { usePlaylistContext } from "../hooks/usePlaylistsContext";
 import './styles/Dashboard.css';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
   const { playlists, dispatch } = usePlaylistContext();
+  const [localPlaylists, setLocalPlaylists] = useState([]);
+  const [notification, setNotification] = useState({ visible: false, message: '' });
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -26,7 +29,10 @@ const Dashboard = () => {
         const response = await fetch("/api/playlists");
         const json = await response.json();
         if (response.ok) {
-          dispatch({ type: 'SET_PLAYLIST', payload: json });
+          // Sort playlists in reverse order (newest first)
+          const sortedPlaylists = [...json].reverse();
+          dispatch({ type: 'SET_PLAYLIST', payload: sortedPlaylists });
+          setLocalPlaylists(sortedPlaylists);
         }
       } catch (error) {
         console.error('Error fetching playlists:', error);
@@ -37,13 +43,29 @@ const Dashboard = () => {
     fetchPlaylists();
   }, [dispatch]);
 
+  const handleDelete = (deletedPlaylistId) => {
+    setLocalPlaylists(prevPlaylists =>
+      prevPlaylists.filter(playlist => playlist._id !== deletedPlaylistId)
+    );
+    setNotification({ visible: true, message: 'Playlist deleted successfully!' });
+  };
+
+  const closeNotification = () => {
+    setNotification({ visible: false, message: '' });
+  };
+
   return (
     <div className="dashboard">
       {user ? (
-        <>
-          <h1>Welcome, {user.username}</h1>
-          <p>Email: {user.email}</p>
-        </>
+        <div className="user-info">
+          {user.profilePicture && (
+            <img src={user.profilePicture} alt="Profile" className="profile-picture" />
+          )}
+          <div className="user-details">
+            <h1>Welcome, {user.username}</h1>
+            <p>Email: {user.email}</p>
+          </div>
+        </div>
       ) : (
         <p>Loading user information...</p>
       )}
@@ -51,18 +73,23 @@ const Dashboard = () => {
         <div className="createPlaylist">
           <CreatePlaylistButton />
         </div>
-        <div className="OpenGame">
+        {/* <div className="OpenGame">
           <OpenGameButton />
-        </div>
+        </div> */}
         <div className="logout">
           <SpotifyLogoutButton />
         </div>
       </div>
       <div className="playlists">
-        {playlists && playlists.map(playlist => (
-          <Playlistdetails key={playlist._id} playlist={playlist} />
+        {localPlaylists.map(playlist => (
+          <Playlistdetails key={playlist._id} playlist={playlist} onDelete={handleDelete} />
         ))}
       </div>
+      <Notification 
+        message={notification.message}
+        isVisible={notification.visible}
+        onClose={closeNotification}
+      />
     </div>
   );
 };

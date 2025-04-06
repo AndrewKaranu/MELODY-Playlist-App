@@ -17,6 +17,8 @@ app.use(cors({
   credentials: true
 }));
 
+
+
 // Routes import
 const playlistsRoutes = require('./routes/playlists');
 const authRoutes = require('./routes/auth-routes');
@@ -61,6 +63,7 @@ app.use('/api/playlists', playlistsRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/images', imageRoutes);
 app.use('/api/game', gameRoutes);
+
 
 
 // Connect to DB

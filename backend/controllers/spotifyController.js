@@ -47,7 +47,7 @@ exports.callback = async (req, res) => {
     spotifyApi.setRefreshToken(refresh_token);
 
     const me = await spotifyApi.getMe();
-    const { id, display_name, email } = me.body;
+    const { id, display_name, email, images } = me.body;
 
     let user = await User.findOne({ spotifyId: id });
 
@@ -57,13 +57,15 @@ exports.callback = async (req, res) => {
         username: display_name,
         email: email,
         accessToken: access_token,
-        refreshToken: refresh_token
+        refreshToken: refresh_token,
+        profilePicture: images[0]?.url || null
       });
     } else {
       user.accessToken = access_token;
       user.refreshToken = refresh_token;
       user.username = display_name;
       user.email = email;
+      user.profilePicture = images[0]?.url || user.profilePicture
     }
 
     await user.save();
@@ -75,7 +77,8 @@ exports.callback = async (req, res) => {
       email: user.email,
       accessToken: access_token,
       refreshToken: refresh_token,
-      expiresIn: expires_in
+      expiresIn: expires_in,
+      profilePicture: user.profilePicture
     };
 
     console.log('Session after setting user:', req.session);

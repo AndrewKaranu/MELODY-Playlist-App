@@ -1,27 +1,33 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import SearchBar from '../components/SearchBar';
+import './styles/EditPlaylist.css';
+import './styles/CreatePlaylist.css';
+
 
 const EditPlaylist = () => {
   const { id } = useParams();
   const playlistUrl = `https://open.spotify.com/embed/playlist/${id}?utm_source=generator&theme=0`;
+  const navigate = useNavigate();
 
   return (
-    <div>
-      <h2>Edit a Playlist</h2>
+    <div className='edit'>
       <div>
-        <h1>Manage Your Playlists</h1>
-        <SearchBar playlistId={id} />
+        <h1>Search Songs to add</h1>
+        <SearchBar playlistId={id} className="search-bar"/>
         <div>
-      <iframe
+      <iframe className='playlist-iframe'
         style={{ borderRadius: '12px', minHeight: '360px' }}
         src={playlistUrl}
-        width="100%"
-        height="150%"
+        width="80%"
+        height="100%"
         frameBorder="0"
         allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
         loading="lazy"
       ></iframe>
+      <button className="back-to-dashboard" onClick={() => navigate('/dashboard')}>
+        Back to Dashboard
+      </button>
     </div>
       </div>
     </div>
