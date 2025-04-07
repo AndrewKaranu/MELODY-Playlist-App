@@ -221,6 +221,96 @@ const validatePlaylistResponse = (jsonResponse) => {
       throw new Error("Failed to generate image");
     }
   };
+
+
+  // WEB SEARCH POTENTIAL FUNCTIONALITY (commented out for now)
+//   // Function to prompt and generate playlist data using OpenAI's search-enabled model
+// async function viaPrompt(prompt, noOfSongs, res) {
+//   try {
+//     const response = await openai.chat.completions.create({
+//       model: "gpt-4o-search-preview",
+//       web_search_options: {
+//         search_context_size: "medium", // Balance between comprehensiveness and speed
+//       },
+//       messages: [
+//         {
+//           role: "system",
+//           content: `You are a music expert that creates personalized Spotify playlists. 
+          
+// For ANY request involving recent music, current trends, or specific genres, ALWAYS use web search to find the most up-to-date and relevant songs.
+
+// When creating playlists:
+// 1. Consider current music charts, recent releases, and trending artists relevant to the request
+// 2. Include a diverse mix of well-known and emerging artists
+// 3. Match the mood, theme, and specificity of the user's prompt
+// 4. For genre-specific requests, include authentic and respected artists within that genre
+
+// Generate a playlist with:
+// - A creative playlist name
+// - A short one-sentence description capturing the essence of the playlist
+// - A list of exactly ${noOfSongs} songs with song name and artist
+
+// Response format MUST be exactly:
+// Playlist Name: <name>
+// Description: <description>
+// 1. "Song Name" by Artist
+// 2. "Song Name" by Artist
+// [and so on...]`
+//         },
+//         { role: "user", content: prompt }
+//       ],
+//       temperature: 0.8, // Slightly higher temperature for more creative variety
+//     });
+
+//     const responseContent = response.choices?.[0]?.message?.content;
+//     console.log('Response Content:', responseContent);
+//     console.log('Annotations:', response.choices?.[0]?.message?.annotations);
+
+//     if (!responseContent) {
+//       throw new Error("Invalid response from OpenAI API");
+//     }
+
+//     const lines = responseContent.split('\n');
+//     const playlistName = lines.find(line => line.trim().startsWith('Playlist Name:'))?.replace('Playlist Name:', '').trim();
+//     const description = lines.find(line => line.trim().startsWith('Description:'))?.replace('Description:', '').trim();
+
+//     const songs = lines
+//       .filter(line => /^\s*\d+\./.test(line))
+//       .map(line => {
+//         const match = line.match(/^\s*\d+\.\s*"(.+)"\s+by\s+(.+)$/);
+//         return match ? { 
+//           song: match[1].trim(), 
+//           artist: match[2].trim(),
+//           // Store any citation data if present in the response
+//           citation: response.choices?.[0]?.message?.annotations?.find(a => 
+//             a.type === "url_citation" && 
+//             responseContent.indexOf(line) >= a.url_citation.start_index && 
+//             responseContent.indexOf(line) <= a.url_citation.end_index
+//           )?.url_citation?.url
+//         } : null;
+//       })
+//       .filter(song => song !== null);
+
+//     const playlist = {
+//       name: playlistName,
+//       description: description,
+//       songs: songs,
+//       // Include references to web sources that influenced the playlist
+//       sources: response.choices?.[0]?.message?.annotations
+//         ?.filter(a => a.type === "url_citation")
+//         ?.map(a => ({
+//           title: a.url_citation.title,
+//           url: a.url_citation.url
+//         }))
+//     };
+
+//     console.log("Generated Playlist:", playlist);
+//     return playlist;
+//   } catch (error) {
+//     console.error("Error generating playlist:", error);
+//     throw new Error("Failed to generate playlist data: " + error.message);
+//   }
+// }
   
   module.exports = { viaPrompt, viaListeningHistory, viaProvidedTracks, viaProvidedArtists, imageToPrompt, generateImage };
   
