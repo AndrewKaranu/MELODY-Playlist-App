@@ -17,8 +17,8 @@ MELODY is a music application built on the MERN stack (MongoDB, Express, React, 
 
 *   **Frontend:** React, CSS
 *   **Backend:** Node.js, Express.js
-*   **Database:** MongoDB
-*   **AI:** [Specify AI technologies or libraries used, e.g., OpenAI, etc.]
+*   **Database:** MongoDB, Amazon S3
+*   **AI:** Open AI API
 *   **Other:** Spotify API
 
 ## Setup Instructions
