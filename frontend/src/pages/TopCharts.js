@@ -1,10 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import PlaylistForm from '../components/PlaylistForm';
-import HistoryForm from '../components/ViaSongs';
-import ViaTracksForm from '../components/ViaTracks';
-import ViaArtistsForm from '../components/viaArtists';
-import ImageInputForm from '../components/ViaImage';
+import ViaTracksForm from '../components/TopTracks';
+import ViaArtistsForm from '../components/TopArtists';
 import './styles/CreatePlaylist.css';
 
 const TopCharts = () => {
@@ -17,9 +14,6 @@ const TopCharts = () => {
         return <ViaTracksForm />;
       case 'artists':
         return <ViaArtistsForm />;
-      case 'prompt':
-      default:
-        return <PlaylistForm />;
     }
   };
 
