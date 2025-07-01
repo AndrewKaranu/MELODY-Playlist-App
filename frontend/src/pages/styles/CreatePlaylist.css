@@ -13,6 +13,12 @@
   margin-bottom: 2rem;
 }
 
+.button-group-2 {
+  display: flex;
+  justify-content: left;
+  margin-bottom: 2rem;
+}
+
 .button-group button {
   background-color: #13aa52;
   color: white;
