@@ -7,6 +7,8 @@ import Playlistdetails from "../components/Playlistdetails";
 import Notification from '../components/Notification';
 import { usePlaylistContext } from "../hooks/usePlaylistsContext";
 import './styles/Dashboard.css';
+import TopChartsButton from "../components/TopChartsButton";
+import VoiceAgentButton from "../components/VoiceAgentButton.js";
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -72,6 +74,12 @@ const Dashboard = () => {
       <div className="dashboard-buttons">
         <div className="createPlaylist">
           <CreatePlaylistButton />
+        </div>
+        <div className="createPlaylist">
+          <TopChartsButton />
+        </div>
+        <div className="createPlaylist">
+          <VoiceAgentButton />
         </div>
         {/* <div className="OpenGame">
           <OpenGameButton />
