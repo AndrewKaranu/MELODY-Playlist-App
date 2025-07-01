@@ -11,6 +11,7 @@ import ArtistGame from './pages/ArtistGame';
 import Support from './pages/Support';
 import LoadingScreen from './components/LoadingScreen'
 import Features from './pages/Features';
+import TopCharts from './pages/TopCharts';
 
 
 function App() {
@@ -32,7 +33,7 @@ function App() {
               <Route path="/Support" element={<Support />} />
               <Route path='/Loader' element = {<LoadingScreen/>} />
               <Route path="/features" element={<Features />} />
-
+              <Route path="/TopCharts" element={<TopCharts />} />
 
             </Routes>
           </div>
