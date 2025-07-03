@@ -18,7 +18,10 @@ const scopes = [
   'user-top-read',
   'ugc-image-upload',
   'user-follow-read',
-  'user-library-read'
+  'user-library-read',
+  'user-read-playback-state',
+  'user-modify-playback-state',
+  'user-read-currently-playing'
 ];
 
 // Redirect to Spotify for login

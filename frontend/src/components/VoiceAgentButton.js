@@ -3,7 +3,7 @@ import Button from '@mui/material/Button';
 
 const ButtonUsage = () => {
     const redirectCreate = () => {
-        // window.location.href = 'http://localhost:3000/CreatePlaylist';
+        window.location.href = 'http://localhost:3000/VoiceAgent';
       };
     return <Button onClick={redirectCreate} variant="contained">Voice Agent</Button>;
   }

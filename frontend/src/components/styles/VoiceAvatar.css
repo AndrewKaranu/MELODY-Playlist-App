@@ -1,0 +1,362 @@
+.voice-avatar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.avatar-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  z-index: 2;
+}
+
+.avatar-header h3 {
+  font-size: 2rem;
+  margin: 0 0 0.5rem 0;
+  color: #13aa52;
+  font-weight: 700;
+}
+
+.avatar-header p {
+  margin: 0;
+  opacity: 0.8;
+  font-size: 1rem;
+}
+
+.avatar-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+  transition: all 0.3s ease;
+}
+
+.avatar-wrapper.listening {
+  transform: scale(1.05);
+}
+
+.avatar-wrapper.speaking {
+  transform: scale(1.1);
+}
+
+/* Audio level rings */
+.audio-rings {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.ring {
+  position: absolute;
+  border: 2px solid #13aa52;
+  border-radius: 50%;
+  animation: ripple 2s infinite ease-out;
+}
+
+.ring-1 {
+  width: 200px;
+  height: 200px;
+  top: -100px;
+  left: -100px;
+  animation-delay: 0s;
+}
+
+.ring-2 {
+  width: 250px;
+  height: 250px;
+  top: -125px;
+  left: -125px;
+  animation-delay: 0.3s;
+}
+
+.ring-3 {
+  width: 300px;
+  height: 300px;
+  top: -150px;
+  left: -150px;
+  animation-delay: 0.6s;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* Main avatar face */
+.avatar-face {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  position: relative;
+  background: #13aa52;
+  box-shadow: 0 8px 32px rgba(19, 170, 82, 0.3);
+  transition: all 0.3s ease;
+  z-index: 2;
+  background: linear-gradient(135deg, #13aa52 0%, #0f8c3f 100%);
+  border: 3px solid rgba(255, 255, 255, 0.2);
+}
+
+.avatar-face::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #13aa52, #0f8c3f, #13aa52);
+  z-index: -1;
+  animation: rotate 3s linear infinite;
+}
+
+@keyframes rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Eyes */
+.eye {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: white;
+  border-radius: 50%;
+  top: 35px;
+  transition: all 0.2s ease;
+}
+
+.eye-left {
+  left: 25px;
+}
+
+.eye-right {
+  right: 25px;
+}
+
+.eye.blink {
+  height: 2px;
+  top: 43px;
+}
+
+.pupil {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #333;
+  border-radius: 50%;
+  top: 4px;
+  left: 4px;
+  transition: all 0.2s ease;
+}
+
+.eye-shine {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: white;
+  border-radius: 50%;
+  top: 5px;
+  left: 6px;
+}
+
+/* Eye expressions */
+.eye.happy {
+  transform: rotate(-10deg);
+}
+
+.eye.excited {
+  width: 18px;
+  height: 18px;
+}
+
+.eye.focused .pupil {
+  top: 2px;
+}
+
+.eye.attentive .pupil {
+  animation: look-around 3s ease-in-out infinite;
+}
+
+@keyframes look-around {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+/* Mouth */
+.mouth {
+  position: absolute;
+  width: 20px;
+  height: 8px;
+  background: #333;
+  border-radius: 0 0 20px 20px;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  transition: all 0.1s ease;
+}
+
+.mouth.smile {
+  border-radius: 0 0 20px 20px;
+  width: 25px;
+  background: #333;
+}
+
+.mouth.excited {
+  width: 30px;
+  height: 15px;
+  border-radius: 50%;
+  background: #333;
+}
+
+.mouth.small {
+  width: 10px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+/* Cheeks */
+.cheek {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  top: 50px;
+}
+
+.cheek-left {
+  left: 15px;
+}
+
+.cheek-right {
+  right: 15px;
+}
+
+/* Status indicator */
+.avatar-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.status-indicator.listening .status-dot {
+  background: #13aa52;
+}
+
+.status-indicator.speaking .status-dot {
+  background: #0f8c3f;
+  animation: pulse 0.5s infinite;
+}
+
+.status-indicator.idle .status-dot {
+  background: rgba(255, 255, 255, 0.5);
+  animation: none;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+}
+
+/* Voice level visualization */
+.voice-level-container {
+  margin-top: 1rem;
+}
+
+.voice-level-bars {
+  display: flex;
+  align-items: end;
+  gap: 3px;
+  height: 40px;
+  justify-content: center;
+}
+
+.voice-bar {
+  width: 4px;
+  background: linear-gradient(to top, #13aa52, #0f8c3f);
+  border-radius: 2px;
+  min-height: 5px;
+  transition: height 0.1s ease;
+  animation: voice-bar-dance 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes voice-bar-dance {
+  0% { transform: scaleY(1); }
+  100% { transform: scaleY(1.2); }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .voice-avatar-container {
+    padding: 1rem;
+  }
+  
+  .avatar-face {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .eye {
+    width: 14px;
+    height: 14px;
+    top: 30px;
+  }
+  
+  .eye-left { left: 20px; }
+  .eye-right { right: 20px; }
+  
+  .mouth {
+    bottom: 25px;
+  }
+  
+  .ring-1 { width: 160px; height: 160px; top: -80px; left: -80px; }
+  .ring-2 { width: 200px; height: 200px; top: -100px; left: -100px; }
+  .ring-3 { width: 240px; height: 240px; top: -120px; left: -120px; }
+}
+
+/* Animation for mode transitions */
+.avatar-face {
+  animation: gentle-float 4s ease-in-out infinite;
+}
+
+@keyframes gentle-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+}
+
+.avatar-wrapper.speaking .avatar-face {
+  animation: speaking-bounce 0.3s ease-in-out infinite;
+}
+
+@keyframes speaking-bounce {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-2px) scale(1.02); }
+}
