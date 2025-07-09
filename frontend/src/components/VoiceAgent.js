@@ -864,7 +864,7 @@ const VoiceAgent = () => {
       // Give user a moment to see the modal, then auto-close it
       const timer = setTimeout(() => {
         setShowInstructions(false);
-      }, 3000); // Hide after 3 seconds once connected
+      }, 300000); // Hide after 3 seconds once connected
       
       return () => clearTimeout(timer);
     }
@@ -1140,32 +1140,60 @@ const VoiceAgent = () => {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>🎵 How to Use MELODY Voice Agent</h3>
-              <button 
-                className="modal-close-btn"
-                onClick={() => setShowInstructions(false)}
-                title="Close instructions"
-              >
-                ✕
-              </button>
             </div>
             <div className="modal-body">
               <div className="instruction-section">
                 <p>
-                  💡 <strong>How to use:</strong> Have a natural conversation with MELODY! Use voice or text to chat about music. 
-                  The AI will respond with voice and can control your Spotify during the conversation.
+                  💡 <strong>Overview:</strong> MELODY is your AI music companion that understands natural language and can control your Spotify while having conversations about music. Use voice or text to interact naturally!
                 </p>
               </div>
+
               <div className="instruction-section">
-                <p>
-                  🎵 <strong>Examples:</strong> "Play some jazz music", "What's currently playing?", "I'm feeling sad, play something uplifting", 
-                  "Skip this song and play something more energetic", "Tell me about this artist", "Create a workout playlist", 
-                  "Make me a chill study playlist with 15 songs", "Generate a road trip playlist and play it"
-                </p>
+                <p><strong>🎵 Music Playback Control:</strong></p>
+                <p>• Play specific songs, artists, albums, or genres</p>
+                <p>• Control playback: play, pause, skip, previous, shuffle, repeat</p>
+                <p>• Adjust volume and manage your playback devices</p>
+                <p>• Get information about what's currently playing</p>
               </div>
+
+              <div className="instruction-section">
+                <p><strong>📋 Playlist Management:</strong></p>
+                <p>• Create custom playlists based on mood, activity, or genre</p>
+                <p>• Add or remove songs from existing playlists</p>
+                <p>• Play any of your saved playlists</p>
+                <p>• Get personalized music recommendations</p>
+              </div>
+
+              <div className="instruction-section">
+                <p><strong>🔍 Music Discovery & Information:</strong></p>
+                <p>• Search for songs, artists, albums, and playlists</p>
+                <p>• Get detailed information about artists and tracks</p>
+                <p>• Discover new music based on your preferences</p>
+                <p>• Web search for music-related information and news</p>
+              </div>
+
+              <div className="instruction-section">
+                <p><strong>🎤 Voice & Text Interaction:</strong></p>
+                <p>• Natural voice conversations with real-time responses</p>
+                <p>• Type messages for text-based interaction</p>
+                <p>• Interrupt feature - start speaking to interrupt AI responses</p>
+                <p>• Switch between Chat and Avatar view modes</p>
+              </div>
+
+              <div className="instruction-section">
+                <p><strong>💬 Example Commands:</strong></p>
+                <p>• "Play some chill lo-fi music for studying"</p>
+                <p>• "Create a workout playlist with 20 energetic songs"</p>
+                <p>• "What's this song about? Tell me about the artist"</p>
+                <p>• "Skip this song and play something more upbeat"</p>
+                <p>• "Search for information about upcoming concerts"</p>
+                <p>• "Make me a playlist for a road trip and start playing it"</p>
+                <p>• "I'm feeling nostalgic, play some 90s hits"</p>
+              </div>
+
               <div className="instruction-section">
                 <p>
-                  🎤 <strong>Voice Conversation:</strong> Click "Start Recording" to speak naturally to MELODY. The AI will respond with voice 
-                  and can perform actions like playing music, skipping songs, etc. Click "Stop Recording" when you're done speaking.
+                  🎤 <strong>Voice Recording Tips:</strong> Speak clearly for at least 2 seconds. The AI responds with voice and can perform multiple actions in sequence. You can interrupt at any time by speaking again.
                 </p>
               </div>
             </div>
