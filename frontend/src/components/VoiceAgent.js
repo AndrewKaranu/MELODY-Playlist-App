@@ -22,8 +22,13 @@ const VoiceAgent = () => {
   const [currentEmotion, setCurrentEmotion] = useState('neutral');
   const [avatarSpeaking, setAvatarSpeaking] = useState(false);
   
+  // Instructions modal state
+  const [showInstructions, setShowInstructions] = useState(true);
+  
   const wsRef = useRef(null);
   const messagesEndRef = useRef(null);
+  // Ref for scrolling messages container without affecting whole page
+  const messagesContainerRef = useRef(null);
   const audioContextRef = useRef(null);
   const audioStreamRef = useRef(null);
   const audioBufferRef = useRef([]);
@@ -141,6 +146,7 @@ const VoiceAgent = () => {
         setIsTyping(false);
         break;
       
+      // Voice interupt feature
       case 'speech_started':
         setIsProcessing(true);
         setCurrentEmotion('listening');
@@ -448,9 +454,10 @@ const VoiceAgent = () => {
       console.log('Microphone access granted. Settings:', settings);
       console.log('Sample rate:', settings.sampleRate, 'Channel count:', settings.channelCount);
       
-      // Initialize audio context for real-time processing
+      // Initialize audio context for real-time processing with optimized settings
       audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)({ 
-        sampleRate: 24000 // Set to OpenAI's expected sample rate
+        sampleRate: 24000, // Set to OpenAI's expected sample rate
+        latencyHint: 'interactive' // Optimize for low latency
       });
       
       await audioContextRef.current.resume(); // Ensure audio context is active
@@ -470,6 +477,34 @@ const VoiceAgent = () => {
       // Track total audio sent
       let totalAudioDuration = 0;
       let audioChunkCount = 0;
+      let pendingAudioQueue = [];
+      let isProcessingQueue = false;
+      
+      // Process audio queue to prevent overwhelming WebSocket
+      const processAudioQueue = async () => {
+        if (isProcessingQueue || pendingAudioQueue.length === 0) return;
+        
+        isProcessingQueue = true;
+        
+        while (pendingAudioQueue.length > 0 && wsRef.current?.readyState === WebSocket.OPEN) {
+          const audioData = pendingAudioQueue.shift();
+          
+          try {
+            wsRef.current.send(JSON.stringify({
+              type: 'input_audio_buffer.append',
+              audio: audioData
+            }));
+            
+            // Small delay to prevent overwhelming the WebSocket
+            await new Promise(resolve => setTimeout(resolve, 10));
+          } catch (error) {
+            console.error('Error sending audio data:', error);
+            break;
+          }
+        }
+        
+        isProcessingQueue = false;
+      };
       
       // Handle messages from the audio worklet
       audioWorkletNodeRef.current.port.onmessage = (event) => {
@@ -481,23 +516,22 @@ const VoiceAgent = () => {
           audioChunkCount++;
           totalAudioDuration += duration;
           
-          console.log(`Audio chunk ${audioChunkCount}: ${audioData.length} samples, ${duration.toFixed(1)}ms, total: ${totalAudioDuration.toFixed(1)}ms`);
-          
           // Calculate audio level for avatar animation
           const level = data.audioLevel || 0;
           setAudioLevel(level * 100); // Convert to 0-100 range
           
-          // Send to server if WebSocket is open
+          // Queue audio for sending to reduce choppiness
           if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
             const base64Audio = btoa(String.fromCharCode(...new Uint8Array(audioData.buffer)));
+            pendingAudioQueue.push(base64Audio);
             
-            wsRef.current.send(JSON.stringify({
-              type: 'input_audio_buffer.append',
-              audio: base64Audio
-            }));
+            // Process queue asynchronously
+            processAudioQueue();
           } else {
             console.warn('WebSocket not ready, dropping audio chunk');
           }
+        } else if (type === 'audio-data-empty') {
+          console.log('Audio worklet reported empty buffer:', data.message);
         }
       };
         // Create media stream source and connect to worklet
@@ -577,7 +611,7 @@ const VoiceAgent = () => {
     
     // Clean up audio resources
     cleanupAudioResources();
-      // Delay to ensure final audio data is sent before committing
+    // Delay to ensure final audio data is sent before committing
     setTimeout(() => {
       if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
         console.log('Committing audio buffer to OpenAI...');
@@ -593,7 +627,7 @@ const VoiceAgent = () => {
           }
         }));
       }
-    }, 1000); // Increased delay to ensure all audio is received
+    }, 300); // Reduced delay since we now have better buffering
   };
 
   // Clean up audio resources
@@ -817,10 +851,24 @@ const VoiceAgent = () => {
     }
   }, [isConnected]);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll messages container to bottom when new messages arrive
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   }, [messages]);
+
+  // Auto-hide instructions modal after connection is established
+  useEffect(() => {
+    if (isConnected && showInstructions) {
+      // Give user a moment to see the modal, then auto-close it
+      const timer = setTimeout(() => {
+        setShowInstructions(false);
+      }, 3000); // Hide after 3 seconds once connected
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isConnected, showInstructions]);
 
   // Update audio level for avatar visualization
   const updateAudioLevel = () => {
@@ -880,7 +928,7 @@ const VoiceAgent = () => {
   return (
     <div className="voice-agent">
       <div className="voice-agent-header">
-        <h2>🎵 MELODY Voice Agent</h2>
+        
         <div className="header-controls">
           <div className="view-toggle">
             <button
@@ -920,13 +968,14 @@ const VoiceAgent = () => {
               <div className="track-name">{currentTrack.name}</div>
               <div className="track-artist">{currentTrack.artists.join(', ')}</div>
             </div>
-            <button 
+            {/* Uncomment if track updates are still poroblematic */}
+            {/* <button 
               className="refresh-track-btn" 
               onClick={updateCurrentlyPlaying}
               title="Refresh currently playing track"
             >
               🔄
-            </button>
+            </button> */}
           </div>
         </div>
       )}
@@ -942,7 +991,7 @@ const VoiceAgent = () => {
           />
         </div>
       ) : (
-        <div className="messages-container">
+      <div className="messages-container" ref={messagesContainerRef}>
         {messages.map((message, index) => (
           <div key={index} className={`message ${message.type}`}>
             <div className="message-content">
@@ -1074,19 +1123,63 @@ const VoiceAgent = () => {
         )}
       </div>
 
-      <div className="voice-agent-info">        <p>
-          💡 <strong>How to use:</strong> Have a natural conversation with MELODY! Use voice or text to chat about music. 
-          The AI will respond with voice and can control your Spotify during the conversation.
-        </p>
-        <p>
-          🎵 <strong>Examples:</strong> "Play some jazz music", "What's currently playing?", "I'm feeling sad, play something uplifting", 
-          "Skip this song and play something more energetic", "Tell me about this artist", "Create a workout playlist", 
-          "Make me a chill study playlist with 15 songs", "Generate a road trip playlist and play it"
-        </p>
-        <p>
-          🎤 <strong>Voice Conversation:</strong> Click "Start Recording" to speak naturally to MELODY. The AI will respond with voice 
-          and can perform actions like playing music, skipping songs, etc. Click "Stop Recording" when you're done speaking.        </p>
+      {/* Help button */}
+      <div className="help-section">
+        <button 
+          className="btn help-btn"
+          onClick={() => setShowInstructions(true)}
+          title="Show instructions"
+        >
+          ❓ How to Use
+        </button>
       </div>
+
+      {/* Instructions Modal */}
+      {showInstructions && (
+        <div className="modal-overlay" onClick={() => setShowInstructions(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>🎵 How to Use MELODY Voice Agent</h3>
+              <button 
+                className="modal-close-btn"
+                onClick={() => setShowInstructions(false)}
+                title="Close instructions"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="instruction-section">
+                <p>
+                  💡 <strong>How to use:</strong> Have a natural conversation with MELODY! Use voice or text to chat about music. 
+                  The AI will respond with voice and can control your Spotify during the conversation.
+                </p>
+              </div>
+              <div className="instruction-section">
+                <p>
+                  🎵 <strong>Examples:</strong> "Play some jazz music", "What's currently playing?", "I'm feeling sad, play something uplifting", 
+                  "Skip this song and play something more energetic", "Tell me about this artist", "Create a workout playlist", 
+                  "Make me a chill study playlist with 15 songs", "Generate a road trip playlist and play it"
+                </p>
+              </div>
+              <div className="instruction-section">
+                <p>
+                  🎤 <strong>Voice Conversation:</strong> Click "Start Recording" to speak naturally to MELODY. The AI will respond with voice 
+                  and can perform actions like playing music, skipping songs, etc. Click "Stop Recording" when you're done speaking.
+                </p>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="btn primary"
+                onClick={() => setShowInstructions(false)}
+              >
+                Got it!
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -7,8 +7,12 @@ class AudioProcessor extends AudioWorkletProcessor {
     this.isRecording = false;
     this.sampleRate = 44100; // Will be updated by main thread
     this.targetSampleRate = 24000; // OpenAI preferred rate
-    this.minBufferSize = Math.floor(this.targetSampleRate * 0.1); // 100ms of audio at target rate
+    this.bufferDuration = 0.2; // 200ms buffer for smoother audio
+    this.maxBufferSize = Math.floor(this.targetSampleRate * this.bufferDuration);
     this.internalBuffer = [];
+    this.totalBufferedSamples = 0;
+    this.lastSendTime = 0;
+    this.minSendInterval = 150; // Minimum 150ms between sends
     
     this.port.onmessage = (event) => {
       const { type, data } = event.data;
@@ -17,6 +21,8 @@ class AudioProcessor extends AudioWorkletProcessor {
         case 'start-recording':
           this.isRecording = true;
           this.internalBuffer = [];
+          this.totalBufferedSamples = 0;
+          this.lastSendTime = currentTime;
           this.sampleRate = data.sampleRate || 44100;
           console.log(`[AudioProcessor] Recording started. Sample Rate: ${this.sampleRate}`);
           break;
@@ -24,7 +30,7 @@ class AudioProcessor extends AudioWorkletProcessor {
         case 'stop-recording':
           this.isRecording = false;
           console.log('[AudioProcessor] Recording stopped. Sending final buffer.');
-          this.sendBufferedAudio();
+          this.sendBufferedAudio(true);
           break;
           
         default:
@@ -47,55 +53,59 @@ class AudioProcessor extends AudioWorkletProcessor {
       return true;
     }
 
-    // Buffer all audio data (including silence) to ensure sufficient buffer length
+    // Buffer audio data more efficiently
     this.internalBuffer.push(new Float32Array(inputChannelData));
+    this.totalBufferedSamples += inputChannelData.length;
 
-    // Send data if buffer is large enough (e.g., every 200ms)
-    // This logic might need adjustment based on how frequently 'process' is called
-    // and the size of inputChannelData.
-    // For now, let's accumulate and send on 'stop-recording' or if a certain size is met.
-    // A more robust approach would be to check the total buffered duration.
-    // For now, flush at 200ms.
-    const bufferedLength = this.internalBuffer.reduce((sum, arr) => sum + arr.length, 0);
-    if (bufferedLength > this.sampleRate * 0.1) { // Approx 100ms of audio
-         // console.log('[AudioProcessor] Buffer threshold reached, sending chunk.');
-         this.sendBufferedAudio();
-     }
+    // Send data based on time interval and buffer size to reduce choppiness
+    const now = currentTime;
+    const timeSinceLastSend = (now - this.lastSendTime) * 1000; // Convert to ms
+    const hasEnoughData = this.totalBufferedSamples >= this.maxBufferSize * 0.5; // 50% of max buffer
+    const hasMinInterval = timeSinceLastSend >= this.minSendInterval;
+    
+    if (hasEnoughData && hasMinInterval) {
+      this.sendBufferedAudio(false);
+      this.lastSendTime = now;
+    }
 
     return true; // Keep processor alive
   }
 
-  sendBufferedAudio() {
+  sendBufferedAudio(isFinal = false) {
     if (this.internalBuffer.length === 0) {
-      // console.log('[AudioProcessor] sendBufferedAudio called, but buffer is empty.');
-      this.port.postMessage({
-        type: 'audio-data-empty',
-        data: { message: 'No audio data captured in worklet buffer.' }
-      });
+      if (isFinal) {
+        this.port.postMessage({
+          type: 'audio-data-empty',
+          data: { message: 'No audio data captured in worklet buffer.' }
+        });
+      }
       return;
     }
 
-    // Combine all Float32Arrays in the buffer
-    const totalSamples = this.internalBuffer.reduce((sum, arr) => sum + arr.length, 0);
-    const combinedFloat32Buffer = new Float32Array(totalSamples);
+    // Combine all Float32Arrays in the buffer more efficiently
+    const combinedFloat32Buffer = new Float32Array(this.totalBufferedSamples);
     let offset = 0;
-    this.internalBuffer.forEach(chunk => {
+    for (let i = 0; i < this.internalBuffer.length; i++) {
+      const chunk = this.internalBuffer[i];
       combinedFloat32Buffer.set(chunk, offset);
       offset += chunk.length;
-    });
+    }
     
-    // Calculate audio level for avatar animation
+    // Calculate audio level for avatar animation (optimized)
     let sum = 0;
-    for (let i = 0; i < totalSamples; i++) {
+    const step = Math.max(1, Math.floor(this.totalBufferedSamples / 1000)); // Sample every nth value for performance
+    for (let i = 0; i < this.totalBufferedSamples; i += step) {
       sum += Math.abs(combinedFloat32Buffer[i]);
     }
-    const audioLevel = totalSamples > 0 ? (sum / totalSamples) : 0;
+    const audioLevel = sum / (this.totalBufferedSamples / step);
     
-    this.internalBuffer = []; // Clear the buffer
+    // Clear the buffer
+    this.internalBuffer.length = 0;
+    this.totalBufferedSamples = 0;
 
-    // Convert Float32 to PCM16
-    const pcm16Data = new Int16Array(totalSamples);
-    for (let i = 0; i < totalSamples; i++) {
+    // Convert Float32 to PCM16 more efficiently
+    const pcm16Data = new Int16Array(combinedFloat32Buffer.length);
+    for (let i = 0; i < combinedFloat32Buffer.length; i++) {
       const sample = Math.max(-1, Math.min(1, combinedFloat32Buffer[i]));
       pcm16Data[i] = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
     }
@@ -108,26 +118,27 @@ class AudioProcessor extends AudioWorkletProcessor {
 
     if (finalBuffer.length === 0) {
         console.warn('[AudioProcessor] Final buffer is empty after processing.');
-        this.port.postMessage({
-            type: 'audio-data-empty',
-            data: { message: 'Final buffer empty after processing in worklet.' }
-        });
+        if (isFinal) {
+          this.port.postMessage({
+              type: 'audio-data-empty',
+              data: { message: 'Final buffer empty after processing in worklet.' }
+          });
+        }
         return;
     }
     
-    // console.log(`[AudioProcessor] Sending audio data. Samples: ${finalBuffer.length}, Original SR: ${this.sampleRate}, Target SR: ${this.targetSampleRate}`);
     this.port.postMessage({
       type: 'audio-data',
       data: {
-        audioData: finalBuffer, // This is Int16Array
+        audioData: finalBuffer,
         sampleRate: this.targetSampleRate,
         duration: (finalBuffer.length / this.targetSampleRate) * 1000,
-        audioLevel: audioLevel // Add audio level for avatar animation
+        audioLevel: audioLevel
       }
     });
   }
   
-  // Resample audio to target sample rate (simplified)
+  // Improved resampling with linear interpolation for better quality
   resampleAudio(inputBuffer, inputSampleRate, outputSampleRate) {
     if (inputSampleRate === outputSampleRate) {
       return inputBuffer;
@@ -143,10 +154,20 @@ class AudioProcessor extends AudioWorkletProcessor {
     }
     const outputBuffer = new Int16Array(outputLength);
     
+    // Linear interpolation for smoother resampling
     for (let i = 0; i < outputLength; i++) {
       const inputIndex = i * ratio;
-      // Simple nearest-neighbor resampling for now
-      outputBuffer[i] = inputBuffer[Math.floor(inputIndex)];
+      const inputIndexFloor = Math.floor(inputIndex);
+      const inputIndexCeil = Math.min(inputIndexFloor + 1, inputBuffer.length - 1);
+      
+      if (inputIndexFloor === inputIndexCeil) {
+        outputBuffer[i] = inputBuffer[inputIndexFloor];
+      } else {
+        const fraction = inputIndex - inputIndexFloor;
+        const sample1 = inputBuffer[inputIndexFloor];
+        const sample2 = inputBuffer[inputIndexCeil];
+        outputBuffer[i] = Math.round(sample1 + (sample2 - sample1) * fraction);
+      }
     }
     return outputBuffer;
   }

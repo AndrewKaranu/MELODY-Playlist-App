@@ -7,7 +7,7 @@ const VoiceAgentPage = () => {
     <div className="voice-agent-page">
       <div className="container">
         <div className="page-header">
-          <h1>🎵 MELODY Voice Agent</h1>
+          {/* <h1>🎵 MELODY Voice Agent</h1> */}
           <p>Talk to your AI music companion and control your Spotify with voice commands</p>
         </div>
         <VoiceAgent />

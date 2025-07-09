@@ -1,8 +1,6 @@
 .voice-agent-page {
     min-height: 100vh;
-    background: linear-gradient(135deg, #121212 0%, #0a1f0a 50%, #121212 100%);
-    padding: 2rem;
-    display: flex;
+    background: linear-gradient(90deg,rgba(94, 138, 87, 1) 0%, rgba(0, 196, 0, 1) 50%, rgba(17, 102, 17, 1) 100%);
     align-items: center;
     justify-content: center;
   }
@@ -26,6 +24,8 @@
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     color: #13aa52;
   }
+
+  
   
   .voice-agent-page .page-header p {
     font-size: 1.2rem;
