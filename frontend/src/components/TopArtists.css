@@ -1,4 +1,4 @@
-.top-tracks-container {
+.top-artists-container {
   display: flex;
   flex-direction: column;
 }
@@ -67,7 +67,8 @@
   color: #2C2C2C;
 }
 
-.tracks.pod {
+/* Artist podium buttons - square format like tracks */
+.artists.pod {
   border-radius: 8px;
   margin: 8px;
   display: block;
@@ -79,41 +80,81 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.tracks.pod:hover {
+.artists.pod:hover {
   transform: perspective(1000px) rotateY(15deg) rotateX(10deg) scale(1.1);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
 }
 
-.podium-item.first .tracks.pod {
+.podium-item.first .artists.pod {
   width: 200px;
   height: 200px;
 }
 
-.podium-item.first .tracks.pod:hover {
+.podium-item.first .artists.pod:hover {
   transform: perspective(1000px) rotateY(-15deg) rotateX(10deg) scale(1.15);
 }
 
-.podium-item.second .tracks.pod {
+.podium-item.second .artists.pod {
   width: 160px;
   height: 160px;
 }
 
-.podium-item.third .tracks.pod {
+.podium-item.third .artists.pod {
   width: 120px;
   height: 120px;
 }
 
+/* Rest list styling with proper spacing */
 .rest-item {
   display: flex;
-  height: 30%;
+  height: 80px;
   border-bottom: 1px #666666 solid;
   flex-direction: row;
   align-items: center;
   margin: 5px;
+  gap: 15px; /* Add gap between elements */
 }
 
 .rest-list p {
   margin: 8px;
+}
+
+.rank-number {
+  font-size: 18px;
+  font-weight: bold;
+  color: #fff;
+  min-width: 25px;
+  text-align: center;
+}
+
+.artist-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.artist-info p {
+  margin: 0;
+  color: #fff;
+}
+
+/* Artist buttons in list - square format like tracks */
+.artists {
+  display: block;
+  height: 70px;
+  width: 70px;
+  padding: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: transparent !important;
+  border-radius: 8px;
+  transition: transform 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.artists:hover {
+  transform: scale(1.05);
 }
 
 .container {
@@ -137,21 +178,6 @@
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-#artist {
-  opacity: 50%;
-}
-
-.tracks {
-  display: block;
-  height: 70px;
-  width: 70px;
-  padding: 0;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-color: transparent !important;
 }
 
 iframe {
