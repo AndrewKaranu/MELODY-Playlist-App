@@ -157,6 +157,42 @@
   transform: scale(1.05);
 }
 
+/* Button styling for clickable artists */
+button.artists {
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  outline: none;
+  background: none;
+}
+
+button.artists:focus {
+  outline: 2px solid #1db954;
+  outline-offset: 2px;
+}
+
+button.artists:active {
+  transform: scale(0.98);
+}
+
+/* Player iframe styling */
+.player {
+  width: 80%;
+  margin: 0 auto 20px;
+}
+
+/* Show player iframe by default, controlled via inline style */
+.player iframe {
+  width: 100%;
+  height: 160px;
+  border-radius: 8px;
+}
+
+/* Override to show embedded Spotify player */
+.player iframe, #embed-iframe-artists iframe {
+  display: block !important;
+}
+
 .container {
   position: relative;
   width: 200px;
@@ -178,13 +214,4 @@
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-iframe {
-  display: none;
-  position: absolute;
-  bottom: 0;
-  width: 89.5%;
-  z-index: 100;
-  height: 100px;
 }

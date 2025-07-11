@@ -158,6 +158,30 @@ const getTopTracks = async (userId, timeRange = 'medium_term') => {
     throw error;
   }
 };
+
+//Getting top tracks of an artist
+const getArtistTopTracks = async (artistId, accessToken) => {
+  try {
+    spotifyApi.setAccessToken(accessToken);
+
+    const response = await spotifyApi.getArtistTopTracks(artistId, 'US');
+
+    const tracks = response.body.tracks.map(track => ({
+      id: track.id,
+      name: track.name,
+      artists: track.artists.map(artist => artist.name).join(', '),
+      album: track.album.name,
+      imageUrl: track.album.images[0]?.url,
+      releaseDate: track.album.release_date
+    }));
+
+    return tracks;
+  } catch (error) {
+    console.error('Error fetching artist top tracks:', error);
+    throw error;
+  }
+};
+
 //Getting top artists of a user for list image view
 const getTopArtists = async (userId, timeRange = 'medium_term') => {
   try {
@@ -275,4 +299,4 @@ async function setPlaylistCover(playlistId, imageBase64, accessToken) {
   }
 }
 
-module.exports = { searchTrack, initializePlaylist, addTracksToPlaylist, deleteSpotifyPlaylist, getAccessToken, getListeningHistory, searchBarTracks, searchBarArtists, getTopTracks, getTopArtists, setPlaylistCover };
+module.exports = { searchTrack, initializePlaylist, addTracksToPlaylist, deleteSpotifyPlaylist, getAccessToken, getListeningHistory, searchBarTracks, searchBarArtists, getTopTracks, getTopArtists, setPlaylistCover, getArtistTopTracks };
