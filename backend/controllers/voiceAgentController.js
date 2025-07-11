@@ -116,7 +116,7 @@ class VoiceAgentController {
             session: {
               modalities: ["text", "audio"],
               instructions: this.getVoiceAgentInstructions(sessionData.spotifyId),
-              voice: "alloy",
+              voice: "ballad",
               input_audio_format: "pcm16",
               output_audio_format: "pcm16",
               input_audio_transcription: {
