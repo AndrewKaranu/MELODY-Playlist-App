@@ -2,7 +2,7 @@ const { response } = require('express')
 const Playlist = require('../models/playlistModel')
 const mongoose = require('mongoose')
 const {viaPrompt, viaListeningHistory,viaProvidedTracks, viaProvidedArtists, imageToPrompt, generateImage} = require('../controllers/openaiController2');
-const { searchTrack, initializePlaylist, addTracksToPlaylist,getListeningHistory, searchBarTracks, searchBarArtists, getTopTracks, getTopArtists, setPlaylistCover, deleteSpotifyPlaylist} = require('../utils/spotifyUtils');
+const { searchTrack, initializePlaylist, addTracksToPlaylist,getListeningHistory, searchBarTracks, searchBarArtists, getTopTracks, getTopArtists, getArtistTopTracks, setPlaylistCover, deleteSpotifyPlaylist} = require('../utils/spotifyUtils');
 const User = require('../models/userModel'); // Adjust the path if necessary
 const { processImageUrl, processUploadedFile } = require('../utils/openaiUtils');
 const axios = require('axios');
@@ -181,6 +181,32 @@ const getTopArtistsController = async (req, res) => {
   }
 };
 
+// Get artist's top tracks
+const getArtistTopTracksController = async (req, res) => {
+  if (!req.session || !req.session.user || !req.session.user.spotifyId) {
+    return res.status(401).json({ message: 'User not authenticated or Spotify ID not found' });
+  }
+
+  const artistId = req.query.artistId;
+  if (!artistId) {
+    return res.status(400).json({ message: 'Artist ID is required' });
+  }
+
+  const spotifyId = req.session.user.spotifyId;
+
+  try {
+    const user = await User.findOne({ spotifyId: spotifyId });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const artistTopTracks = await getArtistTopTracks(artistId, user.accessToken);
+    res.status(200).json({ message: 'Artist top tracks fetched successfully', artistTopTracks });
+  } catch (error) {
+    console.error('Error fetching artist top tracks:', error);
+    res.status(500).json({ message: 'Error fetching artist top tracks', error: error.message });
+  }
+};
 
 const { v4: uuidv4 } = require('uuid');
 const playlistStatuses = require('../utils/playlistStatus');
@@ -781,5 +807,6 @@ module.exports = {
   createPlaylistFromImage,
   getTopTracksController,
   getTopArtistsController,
-  setPlaylistCoverController
+  setPlaylistCoverController,
+  getArtistTopTracksController
 };
