@@ -21,6 +21,7 @@ const {
   createPlaylistFromImage,
   getTopTracksController,
   getTopArtistsController,
+  getArtistTopTracksController,
   setPlaylistCoverController
 } = require('../controllers/playlistController');
 
@@ -35,6 +36,9 @@ router.get('/toptracks', getTopTracksController);
 
 //GET top artists
 router.get('/topartists', getTopArtistsController);
+
+//GET artist's top tracks
+router.get('/artist-top-tracks', getArtistTopTracksController);
 
 //GET tracks based on search query
 router.get('/search', ensureAuthenticated, searchForSongs);
