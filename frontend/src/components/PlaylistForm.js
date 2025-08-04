@@ -4,7 +4,7 @@ import LoadingScreen from "./LoadingScreen";
 import Notification from "./Notification";
 
 const PlaylistForm = () => {
-    const { dispatch } = usePlaylistContext();
+    usePlaylistContext();
     const [prompt, setPrompt] = useState('');
     const [noOfSongs, setNoOfSongs] = useState(1);
     const [useHistory, setUseHistory] = useState(false);

@@ -11,7 +11,6 @@ const VoiceAvatar = ({
   const [eyeBlink, setEyeBlink] = useState(false);
   const [mouthOpen, setMouthOpen] = useState(0);
   const blinkTimer = useRef(null);
-  const mouthTimer = useRef(null);
 
   // Random eye blinking
   useEffect(() => {

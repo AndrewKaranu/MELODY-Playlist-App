@@ -4,6 +4,7 @@ const User = require('../models/userModel'); // Add this line to import the User
 
 let gameState = {};
 
+// Fetch random artists from Spotify
 async function fetchRandomArtists(accessToken, count = 20) {
   try {
     const response = await axios.get('https://api.spotify.com/v1/search', {
@@ -30,7 +31,7 @@ async function fetchRandomArtists(accessToken, count = 20) {
         name: artist.name,
         imageUrl: artist.images[0]?.url,
         monthlyListeners: detailedInfo.data.followers.total, // Using followers as a proxy for monthly listeners
-        previewUrl: '' // You might want to fetch a preview URL from one of the artist's top tracks
+        previewUrl: '' // Placeholder for preview URL, if needed
       };
     }));
     
@@ -40,7 +41,7 @@ async function fetchRandomArtists(accessToken, count = 20) {
     return [];
   }
 }
-
+// Start the game
 exports.startGame = async (req, res) => {
   const { spotifyId } = req.session.user;
   try {

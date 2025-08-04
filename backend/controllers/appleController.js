@@ -1,3 +1,4 @@
+// NOTE: this is sad code. I spent my good time learning how the apple music api worked just to find out that I have to pay close to 300$ for a developer account to even access the damn thing. Tim Cook......******
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');

@@ -15,7 +15,6 @@ const ThreeDModel = () => {
     });
   }, [gltf]);
 
-  const scale = window.innerWidth <= 768 ? [0.8, 0.8, 0.8] : [1.2, 1.2, 1.2];
 
   return (
     <primitive 

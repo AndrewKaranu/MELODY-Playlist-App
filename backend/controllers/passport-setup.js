@@ -1,3 +1,4 @@
+// Initially the idea was to authinticate with passport so as to support multiple streaming platforms but ofcourse apple ifykyk
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const GoogleStrategy = require('passport-google-oauth20').Strategy;

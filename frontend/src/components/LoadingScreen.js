@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ArtistGame from '../pages/ArtistGame';
 import './styles/LoadingScreen.css';
@@ -10,7 +10,7 @@ const LoadingScreen = ({ playlistId, onError, onComplete }) => {
     const navigate = useNavigate();
     const timeoutRef = useRef(null);
 
-    const pollStatus = async () => {
+    const pollStatus = useCallback(async () => {
         if (!playlistId) return;
 
         try {
@@ -42,7 +42,7 @@ const LoadingScreen = ({ playlistId, onError, onComplete }) => {
             console.error('Error fetching status:', error);
             timeoutRef.current = setTimeout(pollStatus, 5000);
         }
-    };
+    }, [playlistId, onComplete, onError]);
 
     useEffect(() => {
         pollStatus();
@@ -52,7 +52,7 @@ const LoadingScreen = ({ playlistId, onError, onComplete }) => {
                 clearTimeout(timeoutRef.current);
             }
         };
-    }, [playlistId]);
+    }, [playlistId, pollStatus]);
 
     const handleViewPlaylist = () => {
         navigate(`/playlist/${spotifyId}`);

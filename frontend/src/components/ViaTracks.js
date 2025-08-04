@@ -213,6 +213,7 @@ const ViaTracksForm = () => {
           <button className="generate-playlist" onClick={generatePlaylist}>Generate Playlist</button>
         )}
       </div>
+      {error && <div className="error">{error}</div>}
       <Notification
         message={notification.message}
         isVisible={notification.isVisible}

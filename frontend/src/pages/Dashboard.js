@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import SpotifyLogoutButton from "../components/SpotifyLogoutButton";
 import CreatePlaylistButton from "../components/CreatePlayListButton";
-import OpenGameButton from "../components/OpenGameButton";
 import Playlistdetails from "../components/Playlistdetails";
 import Notification from '../components/Notification';
 import { usePlaylistContext } from "../hooks/usePlaylistsContext";
@@ -12,7 +11,7 @@ import VoiceAgentButton from "../components/VoiceAgentButton.js";
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
-  const { playlists, dispatch } = usePlaylistContext();
+  const { dispatch } = usePlaylistContext();
   const [localPlaylists, setLocalPlaylists] = useState([]);
   const [notification, setNotification] = useState({ visible: false, message: '' });
 

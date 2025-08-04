@@ -23,7 +23,7 @@ const VoiceAgent = () => {
   const [avatarSpeaking, setAvatarSpeaking] = useState(false);
   
   // Instructions modal state
-  const [showInstructions, setShowInstructions] = useState(true);
+  const [showInstructions, setShowInstructions] = useState(false);
   
   const wsRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -34,7 +34,6 @@ const VoiceAgent = () => {
   const audioBufferRef = useRef([]);
   const audioWorkletNodeRef = useRef(null);
   const mediaStreamSourceRef = useRef(null);
-  const audioChunksRef = useRef([]);
   const audioQueueTimeRef = useRef(0);
   const audioLevelRef = useRef(0);
   
@@ -474,9 +473,6 @@ const VoiceAgent = () => {
       // Create audio worklet node
       audioWorkletNodeRef.current = new AudioWorkletNode(audioContextRef.current, 'audio-processor');
       
-      // Track total audio sent
-      let totalAudioDuration = 0;
-      let audioChunkCount = 0;
       let pendingAudioQueue = [];
       let isProcessingQueue = false;
       
@@ -511,10 +507,7 @@ const VoiceAgent = () => {
         const { type, data } = event.data;
         
         if (type === 'audio-data') {
-          const { audioData, sampleRate, duration } = data;
-          
-          audioChunkCount++;
-          totalAudioDuration += duration;
+          const { audioData } = data;
           
           // Calculate audio level for avatar animation
           const level = data.audioLevel || 0;
@@ -826,6 +819,7 @@ const VoiceAgent = () => {
     setMessages([]);
     setCurrentTrack(null);
   };  // Cleanup on unmount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     return () => {
       if (isRecording) {
@@ -838,6 +832,7 @@ const VoiceAgent = () => {
     };
   }, []);
   // Update currently playing on mount and set up periodic polling
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (isConnected) {
       updateCurrentlyPlaying();
@@ -858,17 +853,17 @@ const VoiceAgent = () => {
     }
   }, [messages]);
 
-  // Auto-hide instructions modal after connection is established
-  useEffect(() => {
-    if (isConnected && showInstructions) {
-      // Give user a moment to see the modal, then auto-close it
-      const timer = setTimeout(() => {
-        setShowInstructions(false);
-      }, 300000); // Hide after 3 seconds once connected
+  // Auto-hide instructions modal after connection is established (disabled since modal is not shown by default)
+  // useEffect(() => {
+  //   if (isConnected && showInstructions) {
+  //     // Give user a moment to see the modal, then auto-close it
+  //     const timer = setTimeout(() => {
+  //       setShowInstructions(false);
+  //     }, 300000); // Hide after 3 seconds once connected
       
-      return () => clearTimeout(timer);
-    }
-  }, [isConnected, showInstructions]);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [isConnected, showInstructions]);
 
   // Update audio level for avatar visualization
   const updateAudioLevel = () => {
@@ -876,27 +871,8 @@ const VoiceAgent = () => {
     requestAnimationFrame(updateAudioLevel);
   };
 
-  // Update emotion based on conversation context
-  const updateEmotion = (messageType, content = '') => {
-    if (messageType === 'playlist_created') {
-      setCurrentEmotion('excited');
-      setTimeout(() => setCurrentEmotion('happy'), 3000);
-    } else if (isRecording) {
-      setCurrentEmotion('listening');
-    } else if (isProcessing) {
-      setCurrentEmotion('thinking');
-    } else if (messageType === 'agent' && content.includes('!')) {
-      setCurrentEmotion('excited');
-      setTimeout(() => setCurrentEmotion('neutral'), 2000);
-    } else if (messageType === 'system') {
-      setCurrentEmotion('thinking');
-      setTimeout(() => setCurrentEmotion('neutral'), 1500);
-    } else {
-      setCurrentEmotion('neutral');
-    }
-  };
-
   // Start audio level monitoring
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (isConnected) {
       updateAudioLevel();

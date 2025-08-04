@@ -16,7 +16,7 @@ const EditPlaylist = () => {
         <h1>Search Songs to add</h1>
         <SearchBar playlistId={id} className="search-bar"/>
         <div>
-      <iframe className='playlist-iframe'
+      <iframe className='playlist-iframe' title="Edit Playlist"
         style={{ borderRadius: '12px', minHeight: '360px' }}
         src={playlistUrl}
         width="80%"
